@@ -1,19 +1,10 @@
-import { Redirect, Route } from 'react-router-dom';
+import {Redirect, Route} from 'react-router-dom';
 import {
-  IonApp,
-  IonIcon,
-  IonLabel,
-  IonRouterOutlet,
-  IonTabBar,
-  IonTabButton,
-  IonTabs,
-  setupIonicReact
+    IonApp,
+    IonRouterOutlet,
+    setupIonicReact
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import { ellipse, square, triangle } from 'ionicons/icons';
-import Tab1 from './pages/Tab1';
-import Tab2 from './pages/Tab2';
-import Tab3 from './pages/Tab3';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -33,44 +24,46 @@ import '@ionic/react/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
+import Department from "./pages/Department";
+import Admin from "./pages/Admin";
+import ProjectsList from "./pages/ProjectsList";
+import ProjectDetail from "./pages/ProjectDetail";
+import React, {useContext} from "react";
+import {DepAdContext} from "./context/DepAdContext";
 
 setupIonicReact();
 
-const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <IonTabs>
-        <IonRouterOutlet>
-          <Route exact path="/tab1">
-            <Tab1 />
-          </Route>
-          <Route exact path="/tab2">
-            <Tab2 />
-          </Route>
-          <Route path="/tab3">
-            <Tab3 />
-          </Route>
-          <Route exact path="/">
-            <Redirect to="/tab1" />
-          </Route>
-        </IonRouterOutlet>
-        <IonTabBar slot="bottom">
-          <IonTabButton tab="tab1" href="/tab1">
-            <IonIcon icon={triangle} />
-            <IonLabel>Tab 1</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="tab2" href="/tab2">
-            <IonIcon icon={ellipse} />
-            <IonLabel>Tab 2</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="tab3" href="/tab3">
-            <IonIcon icon={square} />
-            <IonLabel>Tab 3</IonLabel>
-          </IonTabButton>
-        </IonTabBar>
-      </IonTabs>
-    </IonReactRouter>
-  </IonApp>
-);
+const App = (): JSX.Element => {
+    const ctx = useContext(DepAdContext);
+
+    return(
+        <IonApp>
+            <IonReactRouter>
+                <IonRouterOutlet animated={true} mode={`ios`}>
+                    <Route exact path="/settings/department" component={Department}/>
+                    <Route exact path={`/settings/department/:id/admin`} render={(props)=>
+                        ctx?.departmentId !== null ? <Admin {...props}/> : <Department {...props}/>
+                    }/>
+
+                    <Route exact path="/department/:depId/admin/:adId/project/list" render={(props)=>
+                        ctx?.adminId !== null ? <ProjectsList {...props}/> : <Department {...props}/>
+                    }/>
+
+                    <Route exact path="/department/:depId/admin/:adId/project/detail/:id" render={(props)=>
+                        ctx?.projectId !== null ? <ProjectDetail/> : <ProjectsList {...props}/>
+                    }/>
+
+                    <Route render={()=>
+                        (ctx?.departmentId !== null && ctx?.adminId !== null)
+                            ?
+                            <Redirect push={true} to={`/department/${ctx?.departmentId}/admin/${ctx?.adminId}/project/list`}/>
+                            :
+                            <Redirect push={true} to={`/settings/department`} />
+                    }/>
+                </IonRouterOutlet>
+            </IonReactRouter>
+        </IonApp>
+    )
+}
 
 export default App;

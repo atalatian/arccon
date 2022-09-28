@@ -1,0 +1,7 @@
+.delete-alert.alert-button.alert-button-role-confirm {
+    color: var(--ion-color-danger);
+}
+
+.description-item::part(native){
+    --ion-color-shade: var(--ion-color-light-shade);
+}
