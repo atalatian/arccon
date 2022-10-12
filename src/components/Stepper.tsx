@@ -101,8 +101,18 @@ export default function VerticalLinearStepper({ setStepHeight, setHeight, setAll
     }, [])
 
     return (
-        <Box p={2}>
-            <Stepper activeStep={activeStep} orientation="vertical">
+        <Box p={2} pt={0.1} sx={{
+            "& .MuiStepConnector-root span": { borderColor: `rgba(0, 0, 0, 0.26)` },
+            "& .MuiStepContent-root": { borderColor: `rgba(0, 0, 0, 0.26)` },
+            "& .MuiSvgIcon-root.Mui-active": { color: `#b22b48` },
+            "& .MuiSvgIcon-root.Mui-completed": { color: `#b22b48` },
+        }}>
+            <ThemeProvider theme={theme}>
+                <Typography>
+                    <h1>Aufgabenverteilung</h1>
+                </Typography>
+            </ThemeProvider>
+            <Stepper activeStep={activeStep} orientation="vertical" sx={{ ml: 1 }}>
                 {steps.map((step, index) => (
                     <Step ref={activeStep === step.id ? handleRef : undefined} key={step.id}>
                         <StepLabel>
@@ -118,7 +128,16 @@ export default function VerticalLinearStepper({ setStepHeight, setHeight, setAll
                                     <Button
                                         variant="contained"
                                         onClick={handleNext}
-                                        sx={{ mt: 1, mr: 1 }}
+                                        sx={{
+                                            mt: 1,
+                                            mr: 1,
+                                            "&.MuiButtonBase-root.MuiButton-contained": {
+                                                backgroundColor: `#b22b48`,
+                                            },
+                                            "&.MuiButtonBase-root.MuiButton-contained:hover": {
+                                                backgroundColor: `#97253D`,
+                                            },
+                                        }}
                                     >
                                         <ThemeProvider theme={theme}>
                                             <Typography sx={{ textTransform: `capitalize` }}>
@@ -129,7 +148,16 @@ export default function VerticalLinearStepper({ setStepHeight, setHeight, setAll
                                     <Button
                                         disabled={index === 0}
                                         onClick={handleBack}
-                                        sx={{ mt: 1, mr: 1 }}
+                                        sx={{
+                                            mt: 1,
+                                            mr: 1,
+                                            "&.MuiButtonBase-root.MuiButton-text": {
+                                                color: `#FFFFFF`
+                                            },
+                                            "&.MuiButtonBase-root.MuiButton-text.Mui-disabled": {
+                                                color: `rgba(0, 0, 0, 0.26)`
+                                            }
+                                        }}
                                     >
                                         <ThemeProvider theme={theme}>
                                             <Typography sx={{ textTransform: `capitalize` }}>
@@ -144,9 +172,18 @@ export default function VerticalLinearStepper({ setStepHeight, setHeight, setAll
                 ))}
             </Stepper>
             {activeStep === steps.length && (
-                <Paper square elevation={0} sx={{ p: 3 }}>
+                <Paper square elevation={0} sx={{
+                    backgroundColor: `#C1C1BC`,
+                    p: 3,
+                }}>
                     <Typography>All steps completed - you&apos;re finished</Typography>
-                    <Button onClick={handleReset} sx={{ mt: 1, mr: 1 }}>
+                    <Button onClick={handleReset} sx={{
+                        mt: 1,
+                        mr: 1,
+                        "&.MuiButtonBase-root.MuiButton-text": {
+                            color: `#fff`
+                        },
+                    }}>
                         Reset
                     </Button>
                 </Paper>

@@ -30,36 +30,27 @@ import ProjectsList from "./pages/ProjectsList";
 import ProjectDetail from "./pages/ProjectDetail";
 import React, {useContext} from "react";
 import {DepAdContext} from "./context/DepAdContext";
+import Setup from "./pages/Setup";
+import AddProject from "./pages/AddProject";
 
 setupIonicReact();
+
+//1d1d1b
+//b22b48
 
 const App = (): JSX.Element => {
     const ctx = useContext(DepAdContext);
 
+
+
     return(
         <IonApp>
             <IonReactRouter>
-                <IonRouterOutlet animated={true} mode={`ios`}>
-                    <Route exact path="/settings/department" component={Department}/>
-                    <Route exact path={`/settings/department/:id/admin`} render={(props)=>
-                        ctx?.departmentId !== null ? <Admin {...props}/> : <Department {...props}/>
-                    }/>
-
-                    <Route exact path="/department/:depId/admin/:adId/project/list" render={(props)=>
-                        ctx?.adminId !== null ? <ProjectsList {...props}/> : <Department {...props}/>
-                    }/>
-
-                    <Route exact path="/department/:depId/admin/:adId/project/detail/:id" render={(props)=>
-                        ctx?.projectId !== null ? <ProjectDetail/> : <ProjectsList {...props}/>
-                    }/>
-
-                    <Route render={()=>
-                        (ctx?.departmentId !== null && ctx?.adminId !== null)
-                            ?
-                            <Redirect push={true} to={`/department/${ctx?.departmentId}/admin/${ctx?.adminId}/project/list`}/>
-                            :
-                            <Redirect push={true} to={`/settings/department`} />
-                    }/>
+                <IonRouterOutlet animated={true}>
+                    <Route exact path={`/`} component={Setup}/>
+                    <Route exact path={`/project/list`} component={ProjectsList}/>
+                    <Route exact path={`/project/add`} component={AddProject}/>
+                    <Route exact path={`/project/detail`} component={ProjectDetail}/>
                 </IonRouterOutlet>
             </IonReactRouter>
         </IonApp>

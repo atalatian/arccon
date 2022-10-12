@@ -7,14 +7,15 @@ import {
     IonPage,
     IonTitle,
     IonToolbar,
-    IonBackButton, IonButton, useIonAlert, IonIcon,
+    IonBackButton, IonButton, useIonAlert, IonIcon, IonImg, IonListHeader,
 } from "@ionic/react";
 import {Box} from "@mui/system";
 import VerticalLinearStepper from "../components/Stepper";
 import './ProjectDetail.css';
 import { checkbox, closeCircle } from 'ionicons/icons';
-import {useCallback, useContext, useEffect, useRef, useState} from "react";
+import React, {useCallback, useContext, useEffect, useRef, useState} from "react";
 import {DepAdContext} from "../context/DepAdContext";
+import LogoNoText from "../images/arccon-logo-no-text.png";
 
 
 enum ACCORDION {
@@ -56,15 +57,15 @@ const ProjectDetail = () : JSX.Element => {
     return(
         <IonPage>
             <IonHeader>
-                <IonToolbar>
+                <IonToolbar className={`custom-toolbar`}>
                     <IonButtons slot={`start`}>
-                        <IonBackButton defaultHref={`/department/${ctx?.departmentId}/admin/${ctx?.adminId}/project/list`}/>
+                        <IonBackButton defaultHref={`/project/list`}/>
                     </IonButtons>
                     <IonButtons slot={`end`}>
                         <IonButton color={`danger`} onClick={()=>{
                             presentAlert({
                                 header: `Are you sure you want to delete this item?`,
-                                mode: `ios`,
+                                cssClass: `custom-alert`,
                                 buttons: [
                                     {
                                         text: 'Cancel',
@@ -84,19 +85,23 @@ const ProjectDetail = () : JSX.Element => {
                         </IonButton>
                     </IonButtons>
                     <IonTitle>
-                        Detail
+                        <Box width={65} margin={`auto`} className={`custom-logo`}>
+                            <IonImg src={LogoNoText}/>
+                        </Box>
                     </IonTitle>
                 </IonToolbar>
             </IonHeader>
-            <IonContent ref={handleRef} scrollEvents={true}>
-                <IonAccordionGroup value={showAccordion.toString()} style={{ position: `sticky`, top: 0, zIndex: 1, }}>
-                    <IonAccordion value={ACCORDION.OPEN.toString()}>
+            <IonContent ref={handleRef} scrollEvents={true} className={`custom-content`}>
+                <IonAccordionGroup className={`custom-accordion-group`} value={showAccordion.toString()} style={{ position: `sticky`, top: `12px`, zIndex: 1, }}>
+                    <IonAccordion className={`custom-accordion`} value={ACCORDION.OPEN.toString()}>
                         <IonItem slot={`header`} color={`medium`} onClick={handleAccordionClick}>
-                            <IonLabel>
-                                Description
-                            </IonLabel>
+                            <IonListHeader className={`custom-list-header`}>
+                                <Box component={`h1`} m={2} ml={0}>
+                                    Description
+                                </Box>
+                            </IonListHeader>
                         </IonItem>
-                        <Box slot={`content`} sx={{ bgcolor: `#f4f5f8`, borderBottom: 1, borderColor: `#92949c`, }}>
+                        <Box slot={`content`} sx={{ bgcolor: `rgba(255, 255, 255, 0.5)`, }}>
                             <IonItem className={`description-item`} color={`transparent`}>
                                 <IonLabel>
                                     Auftraggeber
@@ -115,19 +120,19 @@ const ProjectDetail = () : JSX.Element => {
                                 </IonLabel>
                                 <p style={{ fontSize: `1rem` }}>Projektnummer</p>
                             </IonItem>
-                            <IonItem className={`description-item`} color={`transparent`}>
+                            <IonItem className={`description-item custom-success-icon`} color={`transparent`}>
                                 <IonIcon slot={`end`} icon={checkbox} color={`success`}/>
                                 <IonLabel>
                                     Umweltuntersuchung
                                 </IonLabel>
                             </IonItem>
-                            <IonItem className={`description-item`} color={`transparent`} lines={`full`}>
+                            <IonItem className={`description-item custom-danger-icon`} color={`transparent`} lines={`full`}>
                                 <IonIcon slot={`end`} icon={closeCircle} color={`danger`}/>
                                 <IonLabel>
                                     Laborversuche
                                 </IonLabel>
                             </IonItem>
-                            <IonItem className={`description-item`} color={`transparent`} lines={`none`}>
+                            <IonItem className={`description-item custom-success-icon`} color={`transparent`} lines={`none`}>
                                 <IonIcon slot={`end`} icon={checkbox} color={`success`} size={`large`}/>
                                 <IonLabel>
                                     <h1>Finished</h1>

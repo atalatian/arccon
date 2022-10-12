@@ -1,23 +1,20 @@
 import {
+    IonBackButton,
     IonButton,
     IonButtons, IonCheckbox,
     IonContent,
-    IonHeader, IonInput,
-    IonItem,
-    IonLabel, IonList,
-    IonModal,
+    IonHeader, IonImg, IonInput, IonItem, IonLabel,
+    IonList, IonListHeader,
+    IonPage,
     IonTitle,
     IonToolbar
 } from "@ionic/react";
-import {useState} from "react";
-import "./AddProject.css";
+import React, {useState} from "react";
+import '../components/AddProject.css';
+import {Box} from "@mui/system";
+import LogoNoText from "../images/arccon-logo-no-text.png";
 
-interface Props {
-    isOpen: boolean,
-    setIsOpen: (isOpen: boolean) => void,
-}
-
-const AddProject = ({ isOpen, setIsOpen } : Props) : JSX.Element => {
+const AddProject = () => {
     const [employer, setEmployer] = useState<string>('');
     const [name, setName] = useState<string>('');
     const [projectId, setProjectId] = useState<string>('');
@@ -25,13 +22,17 @@ const AddProject = ({ isOpen, setIsOpen } : Props) : JSX.Element => {
     const [laboratory, setLaboratory] = useState<boolean>(false);
 
 
-    return (
-        <IonModal isOpen={isOpen} className={`custom-add-modal`} onDidDismiss={()=> setIsOpen(false)}>
+    return(
+        <IonPage className={`custom-add-modal`}>
             <IonHeader>
                 <IonToolbar className={`custom-toolbar`}>
-                    <IonTitle className={`custom-title`}>Neuprojekt</IonTitle>
+                    <IonTitle>
+                        <Box width={65} margin={`auto`} className={`custom-logo`}>
+                            <IonImg src={LogoNoText}/>
+                        </Box>
+                    </IonTitle>
                     <IonButtons slot={`start`}>
-                        <IonButton onClick={() => setIsOpen(false)}>Close</IonButton>
+                        <IonBackButton defaultHref={`/project/list`}/>
                     </IonButtons>
                     <IonButtons slot="end" className={`custom-button`}>
                         <IonButton fill={`solid`}>
@@ -42,6 +43,9 @@ const AddProject = ({ isOpen, setIsOpen } : Props) : JSX.Element => {
             </IonHeader>
             <IonContent className={`custom-content`}>
                 <IonList inset={true} className={`custom-add-list`}>
+                    <IonListHeader className={`custom-list-header`}>
+                        <h1>Neuprojekt</h1>
+                    </IonListHeader>
                     <IonItem color={`transparent`} className={`custom-item ion-padding-start`}>
                         <IonLabel>Auftraggeber</IonLabel>
                         <IonInput value={employer} slot={`end`} placeholder="Enter Auftraggeber" onIonChange={e => setEmployer(e.detail.value!)} clearInput></IonInput>
@@ -64,8 +68,9 @@ const AddProject = ({ isOpen, setIsOpen } : Props) : JSX.Element => {
                     </IonItem>
                 </IonList>
             </IonContent>
-        </IonModal>
-    );
+        </IonPage>
+    )
 }
+
 
 export default AddProject;

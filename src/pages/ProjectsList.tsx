@@ -3,22 +3,27 @@ import {
     IonButton,
     IonButtons, IonCheckbox, IonChip,
     IonContent, IonFab, IonFabButton, IonFooter,
-    IonHeader, IonIcon,
+    IonHeader, IonIcon, IonImg,
     IonItem,
     IonLabel,
-    IonList, IonLoading,
-    IonPage, IonSearchbar,
+    IonList, IonListHeader, IonLoading,
+    IonPage, IonSearchbar, IonText,
     IonTitle,
     IonToolbar, SearchbarCustomEvent,
     useIonAlert, useIonViewWillLeave
 } from "@ionic/react";
-import { settings, add, trash, closeCircle, person } from 'ionicons/icons';
-import React, {useContext, useState} from "react";
+import {settings, add, trash, closeCircle, person, document, alert} from 'ionicons/icons';
+import React, {useContext, useEffect, useLayoutEffect, useState} from "react";
 import AddProject from "../components/AddProject";
 import "./ProjectList.css";
 import Typography from "@mui/material/Typography";
 import {RouteComponentProps} from "react-router";
 import {DepAdContext} from "../context/DepAdContext";
+import ChooseAdmin from "../components/ChooseAdmin";
+import Logo from '../images/arccon-logo.png';
+import LogoNoText from '../images/arccon-logo-no-text.png';
+import {Backdrop} from "@mui/material";
+import {Box} from "@mui/material";
 
 
 interface Project {
@@ -45,14 +50,26 @@ const data: Project[] = [
     },
 ]
 
-
-const ProjectsList = ({ history }: RouteComponentProps) : JSX.Element => {
+const ProjectsList = (props : RouteComponentProps) : JSX.Element => {
     const [modalOpen, setModalOpen] = useState<boolean>(false);
     const [mode, setMode] = useState<MODES>(MODES.READ);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [searchValue, setSearchValue] = useState<string>('');
     const [presentAlert] = useIonAlert();
     const ctx = useContext(DepAdContext);
+    const [isOpen, setIsOpen] = useState(false);
+    const [openLogo, setOpenLogo] = useState<boolean>(false);
+
+    useLayoutEffect(()=>{
+        setOpenLogo(!props.history.location.state)
+    }, [])
+
+    useEffect(()=>{
+        setTimeout(()=> {
+            setOpenLogo(false)
+        }, 2000)
+    }, [])
+
 
     const handleItemClick = (id: number) => {
         return (e: React.MouseEvent): void => {
@@ -71,7 +88,7 @@ const ProjectsList = ({ history }: RouteComponentProps) : JSX.Element => {
         return (e: React.MouseEvent<HTMLIonItemElement, MouseEvent>): void =>{
             e.preventDefault();
             ctx?.setProjectId(id);
-            history.push(`/department/${ctx?.departmentId}/admin/${ctx?.adminId}/project/detail/${id}`);
+            props.history.push(`/project/detail`);
         }
     }
 
@@ -96,10 +113,20 @@ const ProjectsList = ({ history }: RouteComponentProps) : JSX.Element => {
 
     return (
         <IonPage>
+            {
+                openLogo &&
+                <Box position={`absolute`} bgcolor={`#C1C1BC`} zIndex={99999999} width={`100%`} height={`100%`}>
+                    <Box display="grid" gridTemplateColumns="repeat(6, 1fr)" height={`inherit`}>
+                        <Box gridRow={`span 1`} gridColumn="2 / span 4" alignSelf={`center`}>
+                            <IonImg src={Logo}/>
+                        </Box>
+                    </Box>
+                </Box>
+            }
             <IonHeader>
-                <IonToolbar>
+                <IonToolbar className={`custom-toolbar`}>
                     <IonButtons slot={`start`}>
-                        <IonButton routerLink={`/settings/department`}>
+                        <IonButton onClick={()=> setIsOpen(true)}>
                             <IonIcon icon={person}/>
                         </IonButton>
                     </IonButtons>
@@ -112,22 +139,32 @@ const ProjectsList = ({ history }: RouteComponentProps) : JSX.Element => {
                             </IonButton>
                         }
                     </IonButtons>
-                    <IonTitle>Projects</IonTitle>
+                    <IonTitle>
+                        <Box width={65} margin={`auto`} className={`custom-logo`}>
+                            <IonImg src={LogoNoText}/>
+                        </Box>
+                    </IonTitle>
                 </IonToolbar>
             </IonHeader>
-            <IonContent>
-                <IonSearchbar animated={true} value={searchValue} onIonChange={handleSearch} placeholder={`Search Project`}></IonSearchbar>
-                <IonList>
-                    {
-                        filterSearch(data).map((project): JSX.Element=>{
+            <IonContent className={`custom-content`}>
+                {   !openLogo &&
+                    <IonSearchbar className={`custom-search`} animated={true} value={searchValue} onIonChange={handleSearch} placeholder={`Search Project`}></IonSearchbar>
+                }
+                <IonList inset={true} className={`custom-list`}>
+                    <IonListHeader>
+                        <h1>Projects</h1>
+                    </IonListHeader>
+                    {   filterSearch(data).length > 0
+                        ?
+                        filterSearch(data).map((project, index): JSX.Element=>{
                             return(
-                                <IonItem key={project.id} onClick={mode === MODES.SELECT ? handleItemClick(project.id) : handleClick(project.id)}
-                                         button detail={mode === MODES.READ}
-                                         routerLink={mode === MODES.READ ? `/project/detail/${project.id}` : undefined}>
+                                <IonItem className={`custom-item`} lines={filterSearch(data).length === index + 1 ? 'none' : undefined} key={project.id} onClick={mode === MODES.SELECT ? handleItemClick(project.id) : handleClick(project.id)}
+                                         button detail={mode === MODES.READ}>
                                     {
                                         mode === MODES.SELECT &&
-                                        <IonCheckbox checked={selectedIds.includes(project.id)} slot={`start`}></IonCheckbox>
+                                        <IonCheckbox className={`custom-checkbox`} checked={selectedIds.includes(project.id)} slot={`start`}></IonCheckbox>
                                     }
+                                    <IonIcon slot={`start`} icon={document}/>
                                     <IonLabel>
                                         <h3>{project.name}</h3>
                                         <p>Started At - {project.startDate}</p>
@@ -135,20 +172,28 @@ const ProjectsList = ({ history }: RouteComponentProps) : JSX.Element => {
                                 </IonItem>
                             )
                         })
+                        :
+                        <IonItem className={`custom-item custom-item-alert`}>
+                            <IonIcon icon={alert}/>
+                            <IonLabel>
+                                No project found
+                            </IonLabel>
+                        </IonItem>
                     }
                 </IonList>
-                <IonFab vertical="bottom" horizontal="end" slot="fixed">
-                    <IonFabButton onClick={()=> setModalOpen(true)}>
+                <IonFab vertical="bottom" horizontal="end" slot="fixed" className={`custom-button`}>
+                    <IonFabButton routerLink={`/project/add`}>
                         <IonIcon icon={add} />
                     </IonFabButton>
                 </IonFab>
                 <AddProject isOpen={modalOpen} setIsOpen={setModalOpen}/>
+                <ChooseAdmin {...props} isOpen={isOpen} setIsOpen={setIsOpen}/>
             </IonContent>
             {
                 mode === MODES.SELECT &&
                 <IonFooter>
-                    <IonToolbar>
-                        <IonButtons slot={`end`}>
+                    <IonToolbar className={`custom-toolbar-footer`}>
+                        <IonButtons slot={`end`} className={`custom-delete-button`}>
                             {
                                 mode === MODES.SELECT &&
                                 <IonBadge color={`danger`}>
@@ -160,7 +205,7 @@ const ProjectsList = ({ history }: RouteComponentProps) : JSX.Element => {
                                 <IonButton className={`ion-margin-start`} color={`danger`} onClick={()=>{
                                     presentAlert({
                                         header: `Are you sure you want to delete ${selectedIds.length} items?`,
-                                        mode: `ios`,
+                                        cssClass: `custom-alert`,
                                         buttons: [
                                             {
                                                 text: 'Cancel',
@@ -180,7 +225,7 @@ const ProjectsList = ({ history }: RouteComponentProps) : JSX.Element => {
                                 </IonButton>
                             }
                         </IonButtons>
-                        <IonButtons slot={`start`}>
+                        <IonButtons slot={`start`} className={`custom-delete-button`}>
                             {
                                 mode === MODES.SELECT &&
                                 <IonButton color={`danger`} onClick={handleCancel}>
