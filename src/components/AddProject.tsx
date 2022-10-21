@@ -5,7 +5,7 @@ import {
     IonHeader, IonInput,
     IonItem,
     IonLabel, IonList,
-    IonModal,
+    IonModal, IonText,
     IonTitle,
     IonToolbar
 } from "@ionic/react";
@@ -41,18 +41,21 @@ const AddProject = ({ isOpen, setIsOpen } : Props) : JSX.Element => {
                 </IonToolbar>
             </IonHeader>
             <IonContent className={`custom-content`}>
-                <IonList inset={true} className={`custom-add-list`}>
+                <IonList className={`custom-add-list`}>
                     <IonItem color={`transparent`} className={`custom-item ion-padding-start`}>
                         <IonLabel>Auftraggeber</IonLabel>
-                        <IonInput value={employer} slot={`end`} placeholder="Enter Auftraggeber" onIonChange={e => setEmployer(e.detail.value!)} clearInput></IonInput>
+                        <IonInput className={`custom-input`} value={employer} slot={`end`} placeholder="Enter Auftraggeber" onIonChange={e => setEmployer(e.detail.value!)}
+                                  clearInput></IonInput>
                     </IonItem>
                     <IonItem color={`transparent`} className={`custom-item ion-padding-start`}>
                         <IonLabel>Bauvorhaben</IonLabel>
-                        <IonInput value={name} slot={`end`} placeholder="Enter Bauvorhaben" onIonChange={e => setName(e.detail.value!)} clearInput></IonInput>
+                        <IonInput className={`custom-input`} value={name} slot={`end`} placeholder="Enter Bauvorhaben" onIonChange={e => setName(e.detail.value!)}
+                                  clearInput></IonInput>
                     </IonItem>
                     <IonItem color={`transparent`} className={`custom-item ion-padding-start`}>
                         <IonLabel>Projektnummer</IonLabel>
-                        <IonInput value={projectId} slot={`end`} placeholder="Enter Projektnummer" onIonChange={e => setProjectId(e.detail.value!)} clearInput></IonInput>
+                        <IonInput className={`custom-input`} value={projectId} slot={`end`} placeholder="Enter Projektnummer" onIonChange={e => setProjectId(e.detail.value!)}
+                                  clearInput></IonInput>
                     </IonItem>
                     <IonItem color={`transparent`} className={`custom-item ion-padding-start`}>
                         <IonLabel>Umweltuntersuchung</IonLabel>

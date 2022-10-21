@@ -1,6 +1,6 @@
 import {Redirect, Route} from 'react-router-dom';
 import {
-    IonApp,
+    IonApp, IonNav,
     IonRouterOutlet,
     setupIonicReact
 } from '@ionic/react';
@@ -32,6 +32,7 @@ import React, {useContext} from "react";
 import {DepAdContext} from "./context/DepAdContext";
 import Setup from "./pages/Setup";
 import AddProject from "./pages/AddProject";
+import {RouteComponentProps} from "react-router";
 
 setupIonicReact();
 

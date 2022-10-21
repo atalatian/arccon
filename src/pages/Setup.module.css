@@ -1,4 +1,4 @@
-.gradient-background {
+.gradientBackground {
     background: linear-gradient(300deg,#929289, #FFFFFF);
     background-size: 120% 120%;
     animation: gradient-animation 5s ease infinite;
@@ -16,8 +16,11 @@
     }
 }
 
-.custom-button{
+.customButton{
     --ion-color-primary: #b22b48;
-    --ion-color-primary-tint: #CE3657;
-    --ion-color-primary-shade: #97253D;
+    --ion-color-primary-rgb: 178,43,72;
+    --ion-color-primary-contrast: #ffffff;
+    --ion-color-primary-contrast-rgb: 255,255,255;
+    --ion-color-primary-shade: #9d263f;
+    --ion-color-primary-tint: #ba405a
 }

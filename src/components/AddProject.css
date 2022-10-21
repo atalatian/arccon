@@ -1,6 +1,13 @@
 .custom-add-modal .custom-toolbar{
-    --background: #929289;
-    --ion-text-color: #1d1d1b;
+    --background: #e0e0de;
+    --ion-color-primary: #3F3F3A;
+    --ion-border-color: #C1C1BC;
+    --ion-text-color: #000;
+    --border-width: 0 0 1px 0 !important;
+}
+
+.custom-add-modal .header-md::after{
+    content: none;
 }
 
 .custom-add-modal .custom-button{
@@ -15,7 +22,17 @@
 }
 
 .custom-add-modal .custom-content{
-    --ion-background-color: #C1C1BC;
+    --ion-background-color: #e0e0de;
+}
+
+.custom-add-modal .custom-add-list{
+    margin-top: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.custom-add-modal .custom-input{
+    margin-inline-start: -16px;
 }
 
 .custom-add-modal .custom-item{
@@ -27,19 +44,25 @@
     padding: 0;
 }
 
-.custom-add-modal .custom-add-list{
-    margin-top: 12px !important;
-    margin-left: 12px !important;
-    margin-right: 12px !important;
-    border-radius: 10px;
-    --ion-background-color: rgba(255, 255, 255, 0.5);
-    box-shadow: 0px 3px 3px -2px rgba(0,0,0,0.2),0px 3px 4px 0px rgba(0,0,0,0.14),0px 1px 8px 0px rgba(0,0,0,0.12);
-}
-
 .custom-add-modal .custom-list-header{
     padding-left: 12px;
 }
 
+.custom-add-modal{
+    --max-height: 268px;
+    --max-width: 90%;
+    --border-radius: 10px;
+    --box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4);
+}
+
+.custom-add-modal.md {
+    --max-height: 312px;
+}
+
 .custom-add-checkbox{
     --ion-color-primary: #b22b48;
+}
+
+.custom-add-modal::part(backdrop) {
+    --ion-backdrop-color: rgba(209, 213, 219);
 }

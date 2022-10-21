@@ -55,7 +55,7 @@ const ProjectDetail = () : JSX.Element => {
     }
 
     return(
-        <IonPage>
+        <IonPage className={`custom-project-detail`}>
             <IonHeader>
                 <IonToolbar className={`custom-toolbar`}>
                     <IonButtons slot={`start`}>
@@ -65,7 +65,7 @@ const ProjectDetail = () : JSX.Element => {
                         <IonButton color={`danger`} onClick={()=>{
                             presentAlert({
                                 header: `Are you sure you want to delete this item?`,
-                                cssClass: `custom-alert`,
+                                cssClass: `custom-detail-alert`,
                                 buttons: [
                                     {
                                         text: 'Cancel',

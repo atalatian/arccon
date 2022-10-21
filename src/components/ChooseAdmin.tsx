@@ -1,11 +1,11 @@
-import {useRef} from "react";
+import React, {useRef} from "react";
 import {
     IonButton,
     IonButtons, IonContent,
-    IonHeader,
+    IonHeader, IonIcon,
     IonInput,
     IonItem,
-    IonLabel, IonListHeader,
+    IonLabel, IonList, IonListHeader,
     IonModal,
     IonTitle,
     IonToolbar
@@ -13,6 +13,8 @@ import {
 import DepartmentsAccordionGroup from "./DepartmentsAccordionGroup";
 import {RouteComponentProps} from "react-router";
 import "./ChooseAdmin.css";
+import {person, star} from "ionicons/icons";
+import {Box} from "@mui/material";
 
 interface Props extends RouteComponentProps{
     isOpen: boolean,
@@ -20,6 +22,11 @@ interface Props extends RouteComponentProps{
 }
 
 const ChooseAdmin = (props: Props) => {
+
+    const handleClick = () => {
+        props.setIsOpen(false);
+        props.history.push(`/project/list`);
+    }
 
     return(
         <IonModal isOpen={props.isOpen} className={`custom-admin-modal`} onDidDismiss={()=> props.setIsOpen(false)}>
@@ -32,7 +39,26 @@ const ChooseAdmin = (props: Props) => {
                 </IonToolbar>
             </IonHeader>
             <IonContent className={`custom-content`}>
-                <DepartmentsAccordionGroup {...props}/>
+                <IonList className={`custom-list`}>
+                    <IonItem button detail lines={`inset`} className={`custom-admin-item`} color={`transparent`} onClick={handleClick}>
+                        <IonIcon icon={person} slot="start"></IonIcon>
+                        <IonLabel>
+                            Admin 1
+                        </IonLabel>
+                    </IonItem>
+                    <IonItem button detail lines={`inset`} className={`custom-admin-item`} color={`transparent`} onClick={handleClick}>
+                        <IonIcon icon={person} slot="start"></IonIcon>
+                        <IonLabel>
+                            Admin 1
+                        </IonLabel>
+                    </IonItem>
+                    <IonItem button detail lines={`none`} className={`custom-admin-item`} color={`transparent`} onClick={handleClick}>
+                        <IonIcon icon={person} slot="start"></IonIcon>
+                        <IonLabel>
+                            Admin 1
+                        </IonLabel>
+                    </IonItem>
+                </IonList>
             </IonContent>
         </IonModal>
     );
