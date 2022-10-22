@@ -13,8 +13,7 @@ import {Box} from "@mui/system";
 import VerticalLinearStepper from "../components/Stepper";
 import './ProjectDetail.css';
 import { checkbox, closeCircle } from 'ionicons/icons';
-import React, {useCallback, useContext, useEffect, useRef, useState} from "react";
-import {DepAdContext} from "../context/DepAdContext";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import LogoNoText from "../images/arccon-logo-no-text.png";
 
 
@@ -31,7 +30,6 @@ const ProjectDetail = () : JSX.Element => {
     const [allow, setAllow] = useState<boolean>(false);
     const [showAccordion, setShowAccordion] = useState<ACCORDION>(ACCORDION.OPEN);
     const content = useRef<HTMLIonContentElement>();
-    const ctx = useContext(DepAdContext);
 
     useEffect(()=>{
         if (loaded && allow){

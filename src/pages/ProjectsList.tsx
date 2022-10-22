@@ -1,28 +1,24 @@
 import {
     IonBadge,
     IonButton,
-    IonButtons, IonCheckbox, IonChip,
+    IonButtons, IonCheckbox,
     IonContent, IonFab, IonFabButton, IonFooter,
     IonHeader, IonIcon, IonImg,
     IonItem,
     IonLabel,
-    IonList, IonListHeader, IonLoading,
-    IonPage, IonSearchbar, IonText,
+    IonList, IonListHeader,
+    IonPage, IonSearchbar,
     IonTitle,
     IonToolbar, SearchbarCustomEvent,
-    useIonAlert, useIonViewWillLeave
+    useIonAlert
 } from "@ionic/react";
-import {settings, add, trash, closeCircle, person, document, alert} from 'ionicons/icons';
-import React, {useContext, useEffect, useLayoutEffect, useState} from "react";
+import {add, trash, document, alert} from 'ionicons/icons';
+import React, {useContext, useState} from "react";
 import AddProject from "../components/AddProject";
 import "./ProjectList.css";
-import Typography from "@mui/material/Typography";
 import {RouteComponentProps} from "react-router";
 import {DepAdContext} from "../context/DepAdContext";
-import ChooseAdmin from "../components/ChooseAdmin";
-import Logo from '../images/arccon-logo.png';
 import LogoNoText from '../images/arccon-logo-no-text.png';
-import {Backdrop} from "@mui/material";
 import {Box} from "@mui/material";
 
 

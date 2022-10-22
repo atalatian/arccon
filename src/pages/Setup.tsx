@@ -1,24 +1,18 @@
 import {
     IonButton,
-    IonCol,
     IonContent,
-    IonGrid,
-    IonHeader,
     IonIcon,
     IonImg,
     IonNavLink,
     IonPage,
-    IonRow
 } from "@ionic/react";
-import {build, business, enter, person, chevronForward} from "ionicons/icons";
-import {Box, Stack} from "@mui/system";
+import {business, chevronForward} from "ionicons/icons";
+import {Box} from "@mui/system";
 import ChooseAdmin from "../components/ChooseAdmin";
-import {useContext, useEffect, useLayoutEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import {RouteComponentProps} from "react-router";
 import Logo from '../images/arccon-logo.png';
 import classes from './Setup.module.css';
-import {DepAdContext} from "../context/DepAdContext";
-import Typography from "@mui/material/Typography";
 
 
 const Setup = (props: RouteComponentProps): JSX.Element => {

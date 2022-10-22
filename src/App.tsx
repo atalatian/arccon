@@ -1,6 +1,6 @@
-import {Redirect, Route} from 'react-router-dom';
+import {Route} from 'react-router-dom';
 import {
-    IonApp, IonNav,
+    IonApp,
     IonRouterOutlet,
     setupIonicReact
 } from '@ionic/react';
@@ -24,15 +24,11 @@ import '@ionic/react/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
-import Department from "./pages/Department";
-import Admin from "./pages/Admin";
 import ProjectsList from "./pages/ProjectsList";
 import ProjectDetail from "./pages/ProjectDetail";
-import React, {useContext} from "react";
-import {DepAdContext} from "./context/DepAdContext";
+import React from "react";
 import Setup from "./pages/Setup";
 import AddProject from "./pages/AddProject";
-import {RouteComponentProps} from "react-router";
 
 setupIonicReact();
 
@@ -40,10 +36,6 @@ setupIonicReact();
 //b22b48
 
 const App = (): JSX.Element => {
-    const ctx = useContext(DepAdContext);
-
-
-
     return(
         <IonApp>
             <IonReactRouter>
