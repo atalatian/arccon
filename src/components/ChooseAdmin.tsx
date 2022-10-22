@@ -1,20 +1,17 @@
-import React, {useRef} from "react";
+import React from "react";
 import {
     IonButton,
     IonButtons, IonContent,
     IonHeader, IonIcon,
-    IonInput,
     IonItem,
-    IonLabel, IonList, IonListHeader,
+    IonLabel, IonList,
     IonModal,
     IonTitle,
     IonToolbar
 } from "@ionic/react";
-import DepartmentsAccordionGroup from "./DepartmentsAccordionGroup";
 import {RouteComponentProps} from "react-router";
 import "./ChooseAdmin.css";
-import {person, star} from "ionicons/icons";
-import {Box} from "@mui/material";
+import {person} from "ionicons/icons";
 
 interface Props extends RouteComponentProps{
     isOpen: boolean,
