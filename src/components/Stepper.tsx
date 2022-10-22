@@ -98,7 +98,7 @@ export default function VerticalLinearStepper({ setStepHeight, setHeight, setAll
             setStepHeight(e.offsetTop);
             setHeight(e.offsetHeight);
         }
-    }, [])
+    }, [setStepHeight, setHeight])
 
     return (
         <Box p={2} pt={0.1} sx={{
