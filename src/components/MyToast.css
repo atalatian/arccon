@@ -1,0 +1,18 @@
+.myToast.error{
+    --background: #FAA613;
+    --color: #fff;
+}
+
+.myToast.error::part(button){
+    color: #fff;
+}
+
+
+.myToast.success{
+    --background: #b22b48;
+    --color: #fff;
+}
+
+.myToast.success::part(button){
+    color: #fff;
+}

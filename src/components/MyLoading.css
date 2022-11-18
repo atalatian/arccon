@@ -1,0 +1,7 @@
+.myLoading{
+    --spinner-color: #1d1d1b;
+}
+
+.myLoading .loading-wrapper{
+    border-radius: 10px;
+}

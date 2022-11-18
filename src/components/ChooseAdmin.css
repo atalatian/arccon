@@ -1,0 +1,53 @@
+.custom-admin-modal{
+    --max-width: 90%;
+    --max-height: 216px;
+    --border-radius: 10px;
+    --box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4);
+}
+
+.custom-admin-modal.ios{
+    --max-height: 176px;
+}
+
+.custom-admin-modal .custom-toolbar{
+    --background: #e0e0de;
+    --ion-color-primary: #3F3F3A;
+    --ion-border-color: #C1C1BC;
+    --ion-toolbar-color: #3F3F3A;
+    --border-width: 0 0 1px 0 !important;
+}
+
+.custom-admin-modal .header-md::after{
+    content: none;
+}
+
+.custom-admin-modal .custom-content{
+    --ion-background-color: #e0e0de;
+}
+
+.custom-admin-modal .custom-title{
+    --color: #1d1d1b;
+}
+
+.custom-admin-modal .custom-accordion-group{
+    margin: 12px;
+    margin-top: 0px !important;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.custom-admin-modal .custom-list-header{
+    padding-left: 0;
+}
+
+.custom-admin-modal .custom-admin-item{
+    --ion-color-shade: #C1C1BC;
+}
+
+.custom-admin-modal .custom-list{
+}
+
+
+.custom-admin-modal::part(backdrop) {
+}

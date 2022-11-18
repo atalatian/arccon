@@ -1,0 +1,96 @@
+.delete-alert.alert-button.alert-button-role-confirm {
+    color: var(--ion-color-danger);
+}
+
+.custom-project-list .custom-toolbar{
+    --background: #929289;
+    --ion-color-primary: #ffffff;
+    --color: #ffffff
+}
+
+.custom-project-list .custom-title{
+    --color: #1d1d1b;
+}
+
+.custom-project-list .custom-button{
+    --ion-color-primary: #b22b48;
+    --ion-color-primary-tint: #CE3657;
+    --ion-color-primary-shade: #97253D;
+}
+
+.custom-project-list .custom-toolbar-footer{
+    --background: #929289;
+}
+
+.custom-project-list .custom-delete-button{
+    --ion-color-danger: #FAA613;
+}
+
+.custom-project-list .custom-checkbox{
+    --ion-color-primary: #b22b48;
+}
+
+.custom-project-list .custom-content{
+    --ion-background-color: #C1C1BC;
+}
+
+
+.custom-project-list .custom-content::part(md){
+    --ion-background-color: #000;
+}
+
+.custom-project-list .custom-item{
+    --ion-background-color: trasparent;
+}
+
+.custom-project-list .custom-item-alert{
+    --ion-text-color: #FAA613;
+}
+
+.custom-project-list .custom-list{
+    --ion-background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 10px !important;
+    margin-top: 0 !important;
+    margin-left: 12px !important;
+    margin-right: 12px !important;
+    box-shadow: 0px 3px 3px -2px rgba(0,0,0,0.2),0px 3px 4px 0px rgba(0,0,0,0.14),0px 1px 8px 0px rgba(0,0,0,0.12);
+}
+
+
+.custom-project-list .custom-search{
+    padding: 12px;
+    --background: rgba(255, 255, 255, 0.5);
+    --box-shadow: 0px 3px 3px -2px rgba(0,0,0,0.2),0px 3px 4px 0px rgba(0,0,0,0.14),0px 1px 8px 0px rgba(0,0,0,0.12);
+    --border-radius: 10px;
+}
+
+.custom-project-list .custom-icon{
+    margin-right: 16px;
+}
+
+.custom-project-list .sort-button{
+    height: 36px;
+    margin-left: 0;
+    padding-left: 0;
+    padding-right: 10px;
+    --ion-color-primary: rgba(255, 255, 255, 0.5);
+    --box-shadow: 0px 3px 3px -2px rgba(0,0,0,0.2),0px 3px 4px 0px rgba(0,0,0,0.14),0px 1px 8px 0px rgba(0,0,0,0.12);
+}
+
+.custom-alert{
+    --background: #e0e0de;
+    --ion-color-primary: #3F3F3A;
+    --ion-color-danger: #FAA613;
+    --ion-color-step-100: #C0C0BC;
+    --box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4);
+}
+
+.custom-alert .alert-wrapper{
+    box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+}
+
+.custom-project-list  .md .custom-logo{
+    margin-left: 0 !important;
+}
+

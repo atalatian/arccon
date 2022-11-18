@@ -1,0 +1,9 @@
+.custom-skeleton .custom-skeleton-item{
+    --background: #e0e0de;
+
+}
+
+.custom-skeleton .custom-skeleton-list{
+    padding-top: 0;
+    padding-bottom: 0;
+}
