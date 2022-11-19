@@ -32,6 +32,7 @@ import AddProject from "./pages/AddProject";
 import { Storage } from '@ionic/storage';
 
 import Parse from 'parse';
+import WonderPush from "wonderpush-cordova-sdk";
 
 const PARSE_APPLICATION_ID = 'i9mX4w1w2M4UtLgVZzYaDU2Ll1HErPaIUreF6JMI';
 const PARSE_HOST_URL = 'https://parseapi.back4app.com/';
@@ -47,6 +48,7 @@ setupIonicReact();
 const App = (): JSX.Element => {
 
     useEffect(()=>{
+        WonderPush.subscribeToNotifications();
         (async ()=>{
             const store = new Storage();
             await store.create();
