@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {
     IonButton,
     IonButtons, IonContent,
@@ -12,8 +12,7 @@ import {
 import {RouteComponentProps} from "react-router";
 import "./ChooseAdmin.css";
 import {person} from "ionicons/icons";
-import { admins as data, Admin } from "../data";
-import produce from "immer";
+import { Admin } from "../data";
 
 
 interface ItemProps extends RouteComponentProps{

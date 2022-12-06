@@ -7,21 +7,21 @@ import {
     IonLabel, IonList,
     IonModal,
     IonTitle,
-    IonToolbar, useIonViewWillLeave
+    IonToolbar,
 } from "@ionic/react";
-import {useEffect, useRef, useState, useId} from "react";
+import {useState} from "react";
 import "./AddProject.css";
-import {close, closeCircleOutline, informationCircle, warning} from "ionicons/icons";
-import {Box} from "@mui/material";
+import {close, warning} from "ionicons/icons";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import MyLoading from "./MyLoading";
 import {RouteComponentProps} from "react-router";
-import Parse from "parse";
 import { tasks } from "../data";
 import React from "react";
 import { v4 as uuidv4 } from 'uuid';
 import {Storage} from "@ionic/storage";
+import db from "../firebaseConfig";
+import { collection, addDoc } from "firebase/firestore";
 
 interface RouteParams extends RouteComponentProps<{
     adminId: string,
@@ -35,14 +35,6 @@ interface ToastError{
 enum ToastType {
     error = `error`,
     success = `success`,
-}
-
-interface Project {
-    id: string,
-    name: string,
-    current_task: number,
-    createdAt: Date,
-    updatedAt: Date,
 }
 
 interface Props extends RouteParams{
@@ -96,19 +88,21 @@ const AddProject = (props : Props) : JSX.Element => {
             return;
         }
 
-        setShowLoading(true);
-        let Project = new Parse.Object('Project');
-        Project.set(`client`, client);
-        Project.set(`name`, name);
-        Project.set(`number`, number);
-        Project.set('environmental_survey', environmentalSurvey);
-        Project.set('laboratory', laboratory);
-        Project.set('admin', parseInt(match.params.adminId));
-        const filteredTasks = tasks.filter((task) => task.environmental_survey === environmentalSurvey && task.laboratory === laboratory);
-        const firstTask = filteredTasks.find((task) => task.level === 1);
-        Project.set(`current_task`, firstTask?.id);
         try {
-            await Project.save();
+            const filteredTasks = tasks.filter((task) => task.environmental_survey === environmentalSurvey && task.laboratory === laboratory);
+            const firstTask = filteredTasks.find((task) => task.level === 1);
+            setShowLoading(true);
+            await addDoc(collection(db, "Projects"), {
+                client: client,
+                name: name,
+                number: number,
+                environmentalSurvey: environmentalSurvey,
+                laboratory: laboratory,
+                admin: parseInt(match.params.adminId),
+                currentTask: firstTask?.id,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            });
             const store = new Storage();
             await store.create();
             await store.remove(`admin-${match.params.adminId}-projects`);

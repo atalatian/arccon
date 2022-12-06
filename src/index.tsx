@@ -4,11 +4,9 @@ import App from './App';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import reportWebVitals from './reportWebVitals';
 import DepAdContextProvider from "./context/DepAdContext";
-import WonderPush from "wonderpush-cordova-sdk";
 
 const container = document.getElementById('root');
 const root = createRoot(container!);
-WonderPush.subscribeToNotifications();
 root.render(
   <React.StrictMode>
       <DepAdContextProvider>

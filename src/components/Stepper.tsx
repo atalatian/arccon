@@ -8,13 +8,13 @@ import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import {createTheme, ThemeProvider} from "@mui/system";
-import {SetStateAction, useCallback, useEffect, useLayoutEffect, useRef, useState} from "react";
+import {SetStateAction, useCallback, useEffect, useRef, useState} from "react";
 import {Task, tasks} from "../data";
-import Parse from "parse";
 import MyLoading from "./MyLoading";
 import MyToast from "./MyToast";
-import {type} from "os";
 import {Storage} from "@ionic/storage";
+import {doc, getDoc, setDoc} from "firebase/firestore";
+import db from "../firebaseConfig";
 
 
 const theme = createTheme({
@@ -49,6 +49,7 @@ interface Props {
     environmentalSurvey: boolean,
     laboratory: boolean,
     projectId: string,
+    adminId: string,
     setBoxTop: React.Dispatch<SetStateAction<number>>,
     setStepHeight: React.Dispatch<SetStateAction<number>>,
     transitionEnd: boolean | undefined,
@@ -56,10 +57,6 @@ interface Props {
     readProject: () => Promise<void>,
 }
 
-enum ACCORDION {
-    OPEN,
-    CLOSE,
-}
 
 enum ToastType {
     error = `error`,
@@ -68,10 +65,10 @@ enum ToastType {
 
 export default function VerticalLinearStepper(props: Props) {
 
-    const { readProject, setProject } = props;
+    const { setProject } = props;
     const { transitionEnd } = props
     const { setStepHeight, setBoxTop } = props
-    const { environmentalSurvey, laboratory, projectId, currentTask } = props;
+    const { environmentalSurvey, laboratory, projectId, currentTask, adminId } = props;
 
     const [showLoading, setShowLoading] = useState<boolean>(false);
     const [loadingMessage, setLoadingMessage] = useState<string>('');
@@ -92,17 +89,15 @@ export default function VerticalLinearStepper(props: Props) {
     const [activeStep, setActiveStep] = React.useState(-1);
 
     const reFetchProject = async (): Promise<void> => {
-        const query = new Parse.Query('Project');
-        query.equalTo('objectId', projectId);
-        const result = await query.first();
+        const result = await getDoc(doc(db, "Projects", projectId));
         const newProject = {
-            id: projectId,
-            client: result?.get('client'),
-            name: result?.get('name'),
-            number: result?.get('number'),
-            current_task: result?.get('current_task'),
-            environmental_survey: result?.get('environmental_survey'),
-            laboratory: result?.get('laboratory'),
+            id: result.id,
+            client: result.get('client'),
+            name: result.get('name'),
+            number: result.get('number'),
+            current_task: result.get('currentTask'),
+            environmental_survey: result.get('environmentalSurvey'),
+            laboratory: result.get('laboratory'),
         }
         const store = new Storage();
         await store.create();
@@ -148,16 +143,16 @@ export default function VerticalLinearStepper(props: Props) {
 
     const handleNext = (id: number) => {
         return async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) : Promise<void> => {
-            let Project: Parse.Object = new Parse.Object('Project');
-            Project.set('objectId', projectId);
-            Project.set('current_task', id);
             try {
                 setLoadingMessage('Changing task')
                 setShowLoading(true);
-                const result = await Project.save();
+                await setDoc(doc(db, "Projects", projectId), {
+                    currentTask: id,
+                    updatedAt: new Date(),
+                }, { merge: true });
                 const store = new Storage();
                 await store.create();
-                await store.remove(`admin-${result.get('admin')}-projects`);
+                await store.remove(`admin-${adminId}-projects`);
                 await store.remove(`project-${projectId}`);
                 await reFetchProject();
                 setShowLoading(false);
@@ -176,16 +171,16 @@ export default function VerticalLinearStepper(props: Props) {
 
     const handleBack = (id: number) => {
         return async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) : Promise<void> => {
-            let Project: Parse.Object = new Parse.Object('Project');
-            Project.set('objectId', projectId);
-            Project.set('current_task', id);
             try {
                 setLoadingMessage('Changing task')
                 setShowLoading(true);
-                const result = await Project.save();
+                await setDoc(doc(db, "Projects", projectId), {
+                    currentTask: id,
+                    updatedAt: new Date(),
+                }, { merge: true });
                 const store = new Storage();
                 await store.create();
-                await store.remove(`admin-${result.get('admin')}-projects`);
+                await store.remove(`admin-${adminId}-projects`);
                 await store.remove(`project-${projectId}`);
                 await reFetchProject();
                 setShowLoading(false);
@@ -203,16 +198,16 @@ export default function VerticalLinearStepper(props: Props) {
     };
 
     const handleFinish = async () => {
-        let Project: Parse.Object = new Parse.Object('Project');
-        Project.set('objectId', projectId);
-        Project.set('current_task', -1);
         try {
             setLoadingMessage('Finishing project')
             setShowLoading(true);
-            const result = await Project.save();
+            await setDoc(doc(db, "Projects", projectId), {
+                currentTask: -1,
+                updatedAt: new Date(),
+            }, { merge: true });
             const store = new Storage();
             await store.create();
-            await store.remove(`admin-${result.get('admin')}-projects`);
+            await store.remove(`admin-${adminId}-projects`);
             await store.remove(`project-${projectId}`);
             await reFetchProject();
             setShowLoading(false);
@@ -229,18 +224,18 @@ export default function VerticalLinearStepper(props: Props) {
     }
 
     const handleReset = async () => {
-        let Project: Parse.Object = new Parse.Object('Project');
-        const firstTaskId: number | undefined = filteredTasks.find((task) =>
-            task.environmental_survey === environmentalSurvey && task.laboratory === laboratory && task.level === 1)?.id
-        Project.set('objectId', projectId);
-        Project.set('current_task', firstTaskId);
         try {
+            const firstTaskId: number | undefined = filteredTasks.find((task) =>
+                task.environmental_survey === environmentalSurvey && task.laboratory === laboratory && task.level === 1)?.id
             setLoadingMessage('Resetting tasks')
             setShowLoading(true);
-            const result = await Project.save();
+            await setDoc(doc(db, "Projects", projectId), {
+                currentTask: firstTaskId,
+                updatedAt: new Date(),
+            }, { merge: true });
             const store = new Storage();
             await store.create();
-            await store.remove(`admin-${result.get('admin')}-projects`);
+            await store.remove(`admin-${adminId}-projects`);
             await store.remove(`project-${projectId}`);
             await reFetchProject();
             setShowLoading(false);

@@ -12,18 +12,18 @@ import {
 import {Box, createTheme, ThemeProvider} from "@mui/system";
 import VerticalLinearStepper from "../components/Stepper";
 import './ProjectDetail.css';
-import {checkbox, checkmarkCircle, closeCircle, trash} from 'ionicons/icons';
+import {checkmarkCircle, closeCircle, trash} from 'ionicons/icons';
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import LogoNoText from "../images/arccon-logo-no-text.png";
-import Parse from "parse";
 import {RouteComponentProps} from "react-router";
 import MyToast from "../components/MyToast";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faMagnifyingGlass} from "@fortawesome/free-solid-svg-icons";
 import Typography from "@mui/material/Typography";
-import {log} from "util";
 import {Storage} from "@ionic/storage";
 import MyLoading from "../components/MyLoading";
+import {deleteDoc, doc, getDoc} from "firebase/firestore";
+import db from "../firebaseConfig";
 
 
 enum ACCORDION {
@@ -32,6 +32,7 @@ enum ACCORDION {
 }
 
 interface RouteParams extends RouteComponentProps<{
+    adminId: string,
     projectId: string,
 }>{}
 
@@ -113,19 +114,17 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
             await store.create();
             const projectCache = await store.get(`project-${match.params.projectId}`);
             if (projectCache === null){
-                const query = new Parse.Query('Project');
-                query.equalTo('objectId', match.params.projectId);
-                setShowAccordion(ACCORDION.CLOSE)
+                setShowAccordion(ACCORDION.CLOSE);
                 setShowCircle(true);
-                const result = await query.first();
+                const result = await getDoc(doc(db, "Projects", match.params.projectId));
                 const newProject = {
-                    id: match.params.projectId,
-                    client: result?.get('client'),
-                    name: result?.get('name'),
-                    number: result?.get('number'),
-                    current_task: result?.get('current_task'),
-                    environmental_survey: result?.get('environmental_survey'),
-                    laboratory: result?.get('laboratory'),
+                    id: result.id,
+                    client: result.get('client'),
+                    name: result.get('name'),
+                    number: result.get('number'),
+                    current_task: result.get('currentTask'),
+                    environmental_survey: result.get('environmentalSurvey'),
+                    laboratory: result.get('laboratory'),
                 }
                 setProject(newProject);
                 await store.set(`project-${match.params.projectId}`, newProject);
@@ -148,6 +147,10 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
         }
     }
 
+    useEffect(()=>{
+        console.log(project)
+    }, [project])
+
     useIonViewDidEnter(()=>{
         (async ()=>{
             await readProject();
@@ -160,11 +163,9 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
             setShowLoading(true);
             const store = new Storage();
             await store.create();
-            let Project: Parse.Object = new Parse.Object('Project');
-            Project.set('objectId', match.params.projectId);
-            const result = await Project.destroy();
+            await deleteDoc(doc(db, 'Projects', match.params.projectId));
             await store.remove(`project-${match.params.projectId}`);
-            await store.remove(`admin-${result.get('admin')}-projects`);
+            await store.remove(`admin-${match.params.adminId}-projects`);
             setShowLoading(false);
             history.go(-1);
         } catch (e: any) {
@@ -184,7 +185,7 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
             <IonHeader>
                 <IonToolbar className={`custom-toolbar`}>
                     <IonButtons slot={`start`}>
-                        <IonBackButton defaultHref={`/`}/>
+                        <IonBackButton defaultHref={`/${match.params.adminId}/project/list`}/>
                     </IonButtons>
                     <IonButtons slot={`end`}>
                         <IonButton color={`danger`} onClick={()=>{
@@ -317,7 +318,7 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
                 {
                     project !== undefined &&
                     <VerticalLinearStepper currentTask={project.current_task} environmentalSurvey={project.environmental_survey} laboratory={project.laboratory}
-                                           projectId={match.params.projectId} setBoxTop={setBoxTop} setStepHeight={setStepHeight} setProject={setProject}
+                                           projectId={match.params.projectId} adminId={match.params.adminId} setBoxTop={setBoxTop} setStepHeight={setStepHeight} setProject={setProject}
                                            transitionEnd={transitionEnd} readProject={readProject}/>
                 }
                 <MyToast showToast={showToast} setShowToast={setShowToast} message={toastMessage} cssClass={toastType}/>

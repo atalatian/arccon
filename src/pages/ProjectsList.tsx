@@ -13,19 +13,16 @@ import {
     IonToolbar, SearchbarCustomEvent,
     useIonAlert, useIonViewDidEnter, useIonViewWillLeave
 } from "@ionic/react";
-import {add, trash, document, exit} from 'ionicons/icons';
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import {add, trash, document} from 'ionicons/icons';
+import React, {useEffect, useState} from "react";
 import AddProject from "../components/AddProject";
 import "./ProjectList.css";
 import {RouteComponentProps} from "react-router";
 import LogoNoText from '../images/arccon-logo-no-text.png';
 import {Box} from "@mui/material";
 import MyToast from "../components/MyToast";
-import Parse from "parse";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {
-    faArrowDownWideShort, faArrowsSpin,
-    faCalendarDays, faClipboardCheck, faClipboardQuestion, faFilePen,
+import {faCalendarDays, faClipboardQuestion,
     faFileSignature,
     faListCheck,
     faMagnifyingGlass
@@ -35,6 +32,8 @@ import MySkeleton from "../components/MySkeleton";
 import Typography from "@mui/material/Typography";
 import MyLoading from "../components/MyLoading";
 import { Storage } from '@ionic/storage';
+import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
+import db from "../firebaseConfig";
 
 
 enum MODES {
@@ -83,18 +82,18 @@ const ProjectsList = (props : RouteParams) : JSX.Element => {
             await store.create();
             const projectsCache = await store.get(`admin-${match.params.adminId}-projects`);
             if (projectsCache === null || projectsCache.length === 0){
-                const query = new Parse.Query('Project');
-                query.equalTo('admin', parseInt(match.params.adminId));
+                const q = query(collection(db, "Project"), where("admin", "==",  parseInt(match.params.adminId)));
                 setShowSkeleton(true);
-                const results = await query.find();
-                const newProjects: Project[] = results.map((project) => {
-                    return {
+                const querySnapshot = await getDocs(q);
+                const newProjects: Project[] = [];
+                querySnapshot.forEach((project) => {
+                    newProjects.push({
                         id: project.id,
                         name: project.get('name'),
-                        current_task: project.get('current_task'),
-                        createdAt: project.createdAt,
-                        updatedAt: project.updatedAt,
-                    }
+                        current_task: project.get('currentTask'),
+                        createdAt: project.get('createdAt').toDate(),
+                        updatedAt: project.get('updatedAt').toDate(),
+                    })
                 });
                 await store.set(`admin-${match.params.adminId}-projects`, newProjects)
                 setProjects(newProjects);
@@ -115,19 +114,19 @@ const ProjectsList = (props : RouteParams) : JSX.Element => {
     }
 
     const reFetchProjects = async (): Promise<void> => {
-        const query = new Parse.Query('Project');
-        query.equalTo('admin', parseInt(match.params.adminId));
+        const q = query(collection(db, "Project"), where("admin", "==",  parseInt(match.params.adminId)));
         const store = new Storage();
         await store.create();
-        const results = await query.find();
-        const newProjects: Project[] = results.map((project) => {
-            return {
+        const querySnapshot = await getDocs(q);
+        const newProjects: Project[] = [];
+        querySnapshot.forEach((project) => {
+            newProjects.push({
                 id: project.id,
                 name: project.get('name'),
-                current_task: project.get('current_task'),
-                createdAt: project.createdAt,
-                updatedAt: project.updatedAt,
-            }
+                current_task: project.get('currentTask'),
+                createdAt: project.get('createdAt').toDate(),
+                updatedAt: project.get('updatedAt').toDate(),
+            })
         });
         await store.set(`admin-${match.params.adminId}-projects`, newProjects);
         setProjects(newProjects);
@@ -138,6 +137,10 @@ const ProjectsList = (props : RouteParams) : JSX.Element => {
             await readProjects();
         })()
     })
+
+    useEffect(()=>{
+        console.log(projects);
+    }, [projects])
 
     const handleItemClick = (id: string) => {
         return (e: React.MouseEvent): void => {
@@ -170,10 +173,6 @@ const ProjectsList = (props : RouteParams) : JSX.Element => {
         setSelectedIds([])
     }
 
-    const handleExitClick = (): void => {
-        props.history.go(-1);
-    }
-
     const filterSearch = (data: Project[]): Project[] => {
         if (searchValue.length > 0){
             return data.filter((project) => project.name.toLowerCase().includes(searchValue.toLowerCase()));
@@ -199,9 +198,7 @@ const ProjectsList = (props : RouteParams) : JSX.Element => {
             const store = new Storage();
             await store.create();
             for (const id of selectedIds){
-                let Project: Parse.Object = new Parse.Object('Project');
-                Project.set('objectId', id);
-                await Project.destroy();
+                await deleteDoc(doc(db, 'Project', id))
                 await store.remove(`project-${id}`);
                 setSelectedIds((prev) => prev.filter((selectedId)=> selectedId !== id));
             }
