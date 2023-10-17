@@ -85,6 +85,16 @@
     --box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4);
 }
 
+.sign-alert{
+    background: #3F3F3A !important;
+    color: #fff !important;
+
+}
+
+.sign-alert.sc-ion-alert-md {
+    border-radius: 10px !important;
+}
+
 .custom-alert .alert-wrapper{
     box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4);
     border-radius: 10px;
@@ -92,5 +102,9 @@
 
 .custom-project-list  .md .custom-logo{
     margin-left: 0 !important;
+}
+
+.custom-project-list .sign-button{
+    --color: #ffffff;
 }
 

@@ -7,6 +7,13 @@ export interface Admin {
     id: number,
     name: string,
     department: Department,
+    uid: string,
+}
+
+export interface Boss{
+    id: number,
+    name: string,
+    uid: string,
 }
 
 export interface Task {
@@ -39,19 +46,35 @@ export const admins: Admin[] = [
         id: 0,
         name: `admin 1`,
         department: departments[0],
+        uid: "PGiu8o2hRCTJ5t7zCHpoh5jhH1U2",
     },
 
     {
         id: 1,
         name: `admin 2`,
         department: departments[0],
+        uid: "D6MlnLdcKAaoOpbi8SEeLQXvggl2",
     },
 
     {
         id: 2,
         name: `admin 3`,
         department: departments[0],
+        uid: "m8bcDjS5IfX6PEYpKuckqrKLxtq2",
     },
+]
+
+export const bosses: Boss[] = [
+    {
+        id: 0,
+        name: "boss 1",
+        uid: "jQJs6c0VP3MUWxxqsLzRsvxChXq2",
+    },
+    {
+        id: 1,
+        name: "boss 2",
+        uid: "pELmkjNmN5UnJS1zwDPwFRzramq1",
+    }
 ]
 
 export const tasks: Task[] = [

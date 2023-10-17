@@ -1,17 +1,17 @@
 import {
     IonButton,
     IonButtons, IonCheckbox,
-    IonContent,
+    IonContent, IonDatetime, IonDatetimeButton,
     IonHeader, IonIcon, IonInput,
     IonItem,
     IonLabel, IonList,
-    IonModal,
+    IonModal, IonText,
     IonTitle,
     IonToolbar,
 } from "@ionic/react";
-import {useState} from "react";
+import {useContext, useEffect, useState} from "react";
 import "./AddProject.css";
-import {close, warning} from "ionicons/icons";
+import {calendar, close, warning} from "ionicons/icons";
 import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
 import MyLoading from "./MyLoading";
@@ -19,9 +19,9 @@ import {RouteComponentProps} from "react-router";
 import { tasks } from "../data";
 import React from "react";
 import { v4 as uuidv4 } from 'uuid';
-import {Storage} from "@ionic/storage";
-import db from "../firebaseConfig";
-import { collection, addDoc } from "firebase/firestore";
+import {collection, addDoc, getFirestore} from "firebase/firestore";
+import {Auth} from "../context/Auth";
+import "./addProjectDate.css"
 
 interface RouteParams extends RouteComponentProps<{
     adminId: string,
@@ -43,14 +43,12 @@ interface Props extends RouteParams{
     setShowToast: (show: boolean)=> void,
     setToastMessage: (message: string) => void,
     setToastType: (type: ToastType) => void,
-    reFetchProjects: () => Promise<void>,
 }
 
 const AddProject = (props : Props) : JSX.Element => {
 
     const { isOpen, setIsOpen, match } = props
     const { setShowToast, setToastMessage, setToastType,} = props
-    const { reFetchProjects } = props
 
     const [client, setClient] = useState<string>('');
     const [clientError, setClientError] = useState<boolean>(false);
@@ -60,8 +58,11 @@ const AddProject = (props : Props) : JSX.Element => {
     const [numberError, setNumberError] = useState<boolean>(false);
     const [environmentalSurvey, setEnvironmentalSurvey] = useState<boolean>(false);
     const [laboratory, setLaboratory] = useState<boolean>(false);
+    const [deadline, setDeadline] = useState<string | string[]>();
     const [toastErrors, setToastErrors] = useState<ToastError[]>([]);
     const [showLoading, setShowLoading] = useState<boolean>(false);
+    const db = getFirestore();
+    const token = useContext(Auth)?.token;
 
     const handleConfirm = async () => {
         let dontContinue = false;
@@ -91,42 +92,41 @@ const AddProject = (props : Props) : JSX.Element => {
         try {
             const filteredTasks = tasks.filter((task) => task.environmental_survey === environmentalSurvey && task.laboratory === laboratory);
             const firstTask = filteredTasks.find((task) => task.level === 1);
-            setShowLoading(true);
-            await addDoc(collection(db, "Projects"), {
+            setIsOpen(false);
+            const pendingData = {
                 client: client,
                 name: name,
                 number: number,
                 environmentalSurvey: environmentalSurvey,
                 laboratory: laboratory,
-                admin: parseInt(match.params.adminId),
                 currentTask: firstTask?.id,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-            });
-            const store = new Storage();
-            await store.create();
-            await store.remove(`admin-${match.params.adminId}-projects`);
-            await reFetchProjects();
-            setShowLoading(false);
+                author: token,
+                admin: match.params.adminId,
+            }
+            if (deadline !== undefined){
+                await addDoc(collection(db, "Projects"), { ...pendingData, deadline: new Date(deadline.toString()) });
+            } else {
+                await addDoc(collection(db, "Projects"), { ...pendingData, });
+            }
             setToastErrors([]);
             setClientError(false);
             setNameError(false);
             setNumberError(false);
-            setIsOpen(false);
             setToastType(ToastType.success);
             setToastMessage('Project added successfully');
             setShowToast(true);
             setClient('');
             setName('');
-            setNumber('')
+            setNumber('');
             setEnvironmentalSurvey(false);
             setLaboratory(false);
+            setDeadline(undefined);
         } catch (e: any) {
-            setShowLoading(false)
+            setShowLoading(false);
+            setIsOpen(true);
             let message = e.message;
-            if (e.code === 100){
-                message = `Unable to connect to the server`
-            }
             setToastErrors((prev) => [...prev, { id: uuidv4(), message: message }])
         }
     }
@@ -144,13 +144,14 @@ const AddProject = (props : Props) : JSX.Element => {
                 <IonToolbar className={`custom-toolbar`}>
                     <IonTitle className={`custom-title`}>Neuprojekt</IonTitle>
                     <IonButtons slot={`start`}>
-                        <IonButton onClick={() => {
+                        <IonButton className={`close-button`} onClick={() => {
                             setIsOpen(false);
                             setClient('');
                             setName('');
                             setNumber('')
                             setEnvironmentalSurvey(false);
                             setLaboratory(false);
+                            setDeadline(undefined);
                         }}>Close</IonButton>
                     </IonButtons>
                     <IonButtons slot="end" className={`custom-button`}>
@@ -181,7 +182,7 @@ const AddProject = (props : Props) : JSX.Element => {
                             clientError &&
                             <IonIcon className={`custom-icon`} icon={warning}></IonIcon>
                         }
-                        <IonInput className={`custom-input`} size={20} value={client} slot={`end`} placeholder="Enter Auftraggeber"
+                        <IonInput className={`custom-input`} value={client} slot={`end`} placeholder="Enter Auftraggeber"
                                   onIonChange={e => {setClient(e.detail.value!); setClientError(false);}}
                                   clearInput></IonInput>
                     </IonItem>
@@ -191,7 +192,7 @@ const AddProject = (props : Props) : JSX.Element => {
                             nameError &&
                             <IonIcon className={`custom-icon`} icon={warning}></IonIcon>
                         }
-                        <IonInput className={`custom-input`} size={20} value={name} slot={`end`} placeholder="Enter Bauvorhaben"
+                        <IonInput className={`custom-input`} value={name} slot={`end`} placeholder="Enter Bauvorhaben"
                                   onIonChange={e => {setName(e.detail.value!); setNameError(false)}}
                                   clearInput></IonInput>
                     </IonItem>
@@ -201,7 +202,7 @@ const AddProject = (props : Props) : JSX.Element => {
                             numberError &&
                             <IonIcon className={`custom-icon`} icon={warning}></IonIcon>
                         }
-                        <IonInput className={`custom-input`} size={20} value={number} slot={`end`} placeholder="Enter Projektnummer"
+                        <IonInput className={`custom-input`} value={number} slot={`end`} placeholder="Enter Projektnummer"
                                   onIonChange={e => {setNumber(e.detail.value!); setNumberError(false)}}
                                   clearInput></IonInput>
                     </IonItem>
@@ -209,9 +210,27 @@ const AddProject = (props : Props) : JSX.Element => {
                         <IonLabel>Umweltuntersuchung</IonLabel>
                         <IonCheckbox className={`custom-add-checkbox`} checked={environmentalSurvey} slot={`end`} onIonChange={e => setEnvironmentalSurvey(e.detail.checked!)}></IonCheckbox>
                     </IonItem>
-                    <IonItem color={`transparent`} lines={`none`} className={`custom-item ion-padding-start`}>
+                    <IonItem color={`transparent`} className={`custom-item ion-padding-start`}>
                         <IonLabel>Laborversuche</IonLabel>
                         <IonCheckbox className={`custom-add-checkbox`} checked={laboratory} slot={`end`} onIonChange={e => setLaboratory(e.detail.checked!)}></IonCheckbox>
+                    </IonItem>
+                    <IonItem color={`transparent`} lines={`none`} className={`custom-item ion-padding-start`}>
+                        <IonLabel>Deadline</IonLabel>
+                        <IonText className={`ion-margin-end`}>
+                            {   deadline ?
+                                new Date(deadline.toString()).toLocaleDateString(`de-DE`, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+                                : null
+                            }
+                        </IonText>
+                        <IonDatetimeButton className={`date-button`} datetime="datetime">
+                            <IonText slot={`date-target`}>
+                                <IonIcon icon={calendar} size={`2px`}></IonIcon>
+                            </IonText>
+                        </IonDatetimeButton>
+                        <IonModal keepContentsMounted={true} className={`date-modal`}>
+                            <IonDatetime name={'hello'} id={`datetime`} defaultValue={`0`} max={`2030-12-31`} showDefaultButtons={true} showClearButton={true} locale="de-DE" presentation={`date`} multiple={false}
+                                         onIonChange={ e => setDeadline(e.detail.value!) }></IonDatetime>
+                        </IonModal>
                     </IonItem>
                 </IonList>
                 <MyLoading showLoading={showLoading} setShowLoading={setShowLoading} message={'Creating new project'}/>

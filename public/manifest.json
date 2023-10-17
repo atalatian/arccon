@@ -1,6 +1,7 @@
 {
-  "short_name": "Ionic App",
-  "name": "My Ionic App",
+  "name": "arccon",
+  "short_name": "arccon",
+  "description": "This is a test",
   "icons": [
     {
       "src": "assets/icon/favicon.png",
@@ -8,14 +9,51 @@
       "type": "image/x-icon"
     },
     {
-      "src": "assets/icon/icon.png",
+      "src": "assets/icons/icon-48.webp",
+      "type": "image/png",
+      "sizes": "48x48",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-72.webp",
+      "type": "image/png",
+      "sizes": "72x72",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-96.webp",
+      "type": "image/png",
+      "sizes": "96x96",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-128.webp",
+      "type": "image/png",
+      "sizes": "128x128",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-192.webp",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-256.webp",
+      "type": "image/png",
+      "sizes": "256x256",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.webp",
       "type": "image/png",
       "sizes": "512x512",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#ffffff",
-  "background_color": "#ffffff"
+  "theme_color": "#C1C1BC",
+  "background_color": "#C0C0BC",
+  "orientation": "portrait-primary"
 }

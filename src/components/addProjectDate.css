@@ -1,0 +1,22 @@
+.date-modal{
+    --border-radius: 10px;
+    --box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4) !important;
+}
+
+
+.date-button{
+}
+
+.date-button::part(native){
+    background: #3F3F3A !important;
+    color: #ffffff;
+}
+
+
+ion-datetime {
+    --background: #e0e0de;
+    --background-rgb: 224, 224, 222;
+    --ion-color-primary: #b22b48;
+    --ion-color-primary-rgb: 188,42,72;
+    border-radius: 10px;
+}

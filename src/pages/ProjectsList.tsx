@@ -1,4 +1,5 @@
 import {
+    IonAlert,
     IonBackButton,
     IonBadge,
     IonButton,
@@ -8,13 +9,13 @@ import {
     IonItem,
     IonLabel,
     IonList, IonListHeader,
-    IonPage, IonSearchbar,
+    IonPage, IonSearchbar, IonSpinner, IonText,
     IonTitle,
     IonToolbar, SearchbarCustomEvent,
     useIonAlert, useIonViewDidEnter, useIonViewWillLeave
 } from "@ionic/react";
-import {add, trash, document} from 'ionicons/icons';
-import React, {useEffect, useState} from "react";
+import {add, trash, document, exit} from 'ionicons/icons';
+import React, {useContext, useEffect, useState} from "react";
 import AddProject from "../components/AddProject";
 import "./ProjectList.css";
 import {RouteComponentProps} from "react-router";
@@ -25,15 +26,17 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCalendarDays, faClipboardQuestion,
     faFileSignature,
     faListCheck,
-    faMagnifyingGlass
+    faMagnifyingGlass, faWarning
 } from "@fortawesome/free-solid-svg-icons";
-import {tasks} from "../data";
+import {admins as adminsData, admins, bosses, tasks} from "../data";
 import MySkeleton from "../components/MySkeleton";
 import Typography from "@mui/material/Typography";
-import MyLoading from "../components/MyLoading";
-import { Storage } from '@ionic/storage';
-import { collection, query, where, getDocs, deleteDoc, doc } from "firebase/firestore";
-import db from "../firebaseConfig";
+import {collection, query, where, getDocs, deleteDoc, doc, onSnapshot, getFirestore} from "firebase/firestore";
+import {Auth} from "../context/Auth";
+import firebase from "firebase/compat";
+import {getAuth, signOut} from "firebase/auth";
+import {Data} from "../context/Data";
+import {UserData} from "../context/Hooks/useGetUserByUID";
 
 
 enum MODES {
@@ -68,23 +71,33 @@ const ProjectsList = (props : RouteParams) : JSX.Element => {
     const [toastType, setToastType] = useState<ToastType>(ToastType.error);
     const [projects, setProjects] = useState<Project[]>([]);
     const [showSkeleton, setShowSkeleton] = useState<boolean | undefined>(undefined);
-    const [showLoading, setShowLoading] = useState<boolean>(false);
-    const [loadingMessage, setLoadingMessage] = useState<string>('');
-    const [presentAlert] = useIonAlert();
+    const [showAlert, setShowAlert] = useState<boolean>(false);
+    const db = getFirestore();
+    const token = useContext(Auth)?.token;
+    const [showSignAlert, setShowSignAlert] = useState(false);
+    const setOpen = useContext(Auth)?.setOpen;
+    const setToken = useContext(Auth)?.setToken;
+    const user = useContext(Data)?.userData as UserData;
+    const isBoss = user.data?.role === "boss";
 
     const { match } = props;
 
-    const readProjects = async (): Promise<void> => {
-        try {
-            setProjects([]);
-            setShowSkeleton(undefined);
-            const store = new Storage();
-            await store.create();
-            const projectsCache = await store.get(`admin-${match.params.adminId}-projects`);
-            if (projectsCache === null || projectsCache.length === 0){
-                const q = query(collection(db, "Project"), where("admin", "==",  parseInt(match.params.adminId)));
-                setShowSkeleton(true);
-                const querySnapshot = await getDocs(q);
+    useEffect(()=>{
+        const newProjectsTest = [
+            {
+                id: "0",
+                name: "test",
+                current_task: 2,
+                createdAt: new Date("2022-03-25"),
+                updatedAt: new Date("2022-03-25"),
+            }
+        ]
+
+        setProjects(newProjectsTest);
+
+        if (token !== undefined && token !== null){
+            const q = query(collection(db, "Projects"), where("admin", "==",  match.params.adminId));
+            const unsubscribe = onSnapshot(q, (querySnapshot) => {
                 const newProjects: Project[] = [];
                 querySnapshot.forEach((project) => {
                     newProjects.push({
@@ -95,52 +108,57 @@ const ProjectsList = (props : RouteParams) : JSX.Element => {
                         updatedAt: project.get('updatedAt').toDate(),
                     })
                 });
-                await store.set(`admin-${match.params.adminId}-projects`, newProjects)
                 setProjects(newProjects);
-                setShowSkeleton(false);
-            } else {
-                setProjects(projectsCache)
-            }
+            });
+        }
+    }, [token])
+
+    const readProjects = async (): Promise<void> => {
+        try {
+            const q = query(collection(db, "Projects"), where("admin", "==",  match.params.adminId));
+            setShowSkeleton(true);
+            const newProjectsTest = [
+                {
+                    id: "0",
+                    name: "test",
+                    current_task: 2,
+                    createdAt: new Date("2022-03-25"),
+                    updatedAt: new Date("2022-03-25"),
+                }
+            ]
+
+            setProjects(newProjectsTest);
+            // const querySnapshot = await getDocs(q);
+            // const newProjects: Project[] = [];
+            // querySnapshot.forEach((project) => {
+            //     newProjects.push({
+            //         id: project.id,
+            //         name: project.get('name'),
+            //         current_task: project.get('currentTask'),
+            //         createdAt: project.get('createdAt').toDate(),
+            //         updatedAt: project.get('updatedAt').toDate(),
+            //     })
+            // });
+
+            setShowSkeleton(false);
         } catch (e: any) {
             setShowSkeleton(false);
             let message = e.message;
-            if (e.code === 100){
-                message = `Unable to connect to the server`
-            }
             setToastType(ToastType.error);
             setToastMessage(message);
             setShowToast(true);
         }
     }
 
-    const reFetchProjects = async (): Promise<void> => {
-        const q = query(collection(db, "Project"), where("admin", "==",  parseInt(match.params.adminId)));
-        const store = new Storage();
-        await store.create();
-        const querySnapshot = await getDocs(q);
-        const newProjects: Project[] = [];
-        querySnapshot.forEach((project) => {
-            newProjects.push({
-                id: project.id,
-                name: project.get('name'),
-                current_task: project.get('currentTask'),
-                createdAt: project.get('createdAt').toDate(),
-                updatedAt: project.get('updatedAt').toDate(),
-            })
-        });
-        await store.set(`admin-${match.params.adminId}-projects`, newProjects);
-        setProjects(newProjects);
-    }
-
     useIonViewDidEnter(()=>{
         (async ()=> {
-            await readProjects();
+            if (token !== undefined && token !== null){
+                await readProjects();
+            } else {
+                setShowSkeleton(false);
+            }
         })()
-    })
-
-    useEffect(()=>{
-        console.log(projects);
-    }, [projects])
+    }, [token])
 
     const handleItemClick = (id: string) => {
         return (e: React.MouseEvent): void => {
@@ -193,24 +211,15 @@ const ProjectsList = (props : RouteParams) : JSX.Element => {
 
     const handleDelete = async () => {
         try {
-            setLoadingMessage(`Deleting ${selectedIds.length === 1 ? 'project' : 'projects'}`)
-            setShowLoading(true);
-            const store = new Storage();
-            await store.create();
+            setShowAlert(false);
             for (const id of selectedIds){
-                await deleteDoc(doc(db, 'Project', id))
-                await store.remove(`project-${id}`);
                 setSelectedIds((prev) => prev.filter((selectedId)=> selectedId !== id));
             }
-            await store.remove(`admin-${match.params.adminId}-projects`);
-            await reFetchProjects();
-            setShowLoading(false);
-        }catch (e: any) {
-            setShowLoading(false);
-            let message = e.message;
-            if (e.code === 100){
-                message = `Unable to connect to the server`
+            for (const id of selectedIds){
+                await deleteDoc(doc(db, 'Projects', id))
             }
+        }catch (e: any) {
+            let message = e.message;
             setToastType(ToastType.error);
             setToastMessage(message);
             setShowToast(true);
@@ -220,6 +229,47 @@ const ProjectsList = (props : RouteParams) : JSX.Element => {
     useIonViewWillLeave(()=>{
         setModalOpen(false);
     })
+
+    const showUpdateAlert = (updated: Date) => {
+        const offset = new Date(Date.now() - 3600000);
+        const updatedNumber = new Date(updated);
+        if (updatedNumber <= offset){
+            return (
+                <Box display={`flex`} component={`p`} alignItems={`center`} gap={1} sx={{ fontSize: `small` }}>
+                    <FontAwesomeIcon icon={faWarning} color={`#FAA613`}/>
+                    <Box component={`span`} sx={{ color: `#FAA613` }}>
+                        Hasn't been updated in a week
+                    </Box>
+                </Box>
+            );
+        }
+
+        return null;
+    }
+
+    const handleSignOut = () => {
+        const auth = getAuth();
+        signOut(auth).then(()=>{
+            props.history.replace("/");
+            if (setToken){
+                setToken(null);
+            }
+            if (setOpen){
+                setOpen(true);
+            }
+        }).catch((error)=>{
+            let message = error;
+            setToastType(ToastType.error);
+            setToastMessage(message);
+            setShowToast(true);
+        })
+    }
+
+    useEffect(()=>{
+        setToastType(ToastType.error);
+        setToastMessage(user.error.message);
+        setShowToast(user.error.show)
+    }, [user])
 
     return (
         <IonPage className={`custom-project-list`}>
@@ -231,7 +281,7 @@ const ProjectsList = (props : RouteParams) : JSX.Element => {
 
                     <IonButtons slot={`end`}>
                         {
-                            mode === MODES.READ &&
+                            mode === MODES.READ && (isBoss || user.data?.id === match.params.adminId) || true &&
                             <IonButton onClick={()=> setMode(MODES.SELECT)}>
                                 <FontAwesomeIcon icon={faListCheck} size={`xl`}/>
                             </IonButton>
@@ -253,7 +303,6 @@ const ProjectsList = (props : RouteParams) : JSX.Element => {
                     <IonListHeader>
                         <h1>Projects</h1>
                     </IonListHeader>
-                    <MySkeleton showSkeleton={showSkeleton}/>
                     {
                         projects.length === 0 && showSkeleton === false &&
                         <Box display={`flex`} flexDirection={`column`} alignItems={`center`} justifyContent={`center`} gap={2} padding={1} color={`rgba(0,0,0,0.3)`}>
@@ -293,68 +342,95 @@ const ProjectsList = (props : RouteParams) : JSX.Element => {
                                                 { `${getTaskName(project.current_task)}` }
                                             </Box>
                                         </Box>
+                                        {showUpdateAlert(project.updatedAt)}
                                     </IonLabel>
                                 </IonItem>
                             )
                         })
                     }
+                    {
+                        showSkeleton && projects.length === 0 && <MySkeleton/>
+                    }
                 </IonList>
-                <IonFab vertical="bottom" horizontal="end" slot="fixed" className={`custom-button`}>
-                    <IonFabButton onClick={handleFabClick}>
-                        <IonIcon size={`large`} icon={add} />
-                    </IonFabButton>
-                </IonFab>
-                <AddProject isOpen={modalOpen} setIsOpen={setModalOpen} {...{setToastType, setShowToast, setToastMessage}}
-                            reFetchProjects={reFetchProjects} {...props}/>
+                {
+                    (isBoss || user.data?.id === match.params.adminId) || true &&
+                    <IonFab vertical="bottom" horizontal="end" slot="fixed" className={`custom-button`}>
+                        <IonFabButton onClick={handleFabClick}>
+                            <IonIcon size={`large`} icon={add} />
+                        </IonFabButton>
+                    </IonFab>
+                }
+                <AddProject isOpen={modalOpen} setIsOpen={setModalOpen} {...{setToastType, setShowToast, setToastMessage}} {...props}/>
                 <MyToast showToast={showToast} setShowToast={setShowToast} message={toastMessage} cssClass={toastType}/>
-                <MyLoading showLoading={showLoading} setShowLoading={setShowLoading} message={loadingMessage}/>
+                <Box sx={{ height: `76px` }}></Box>
             </IonContent>
-            {
-                mode === MODES.SELECT &&
-                <IonFooter>
-                    <IonToolbar className={`custom-toolbar-footer`}>
+            <IonFooter>
+                <IonToolbar className={`custom-toolbar-footer`}>
+                    {
+                        mode === MODES.SELECT &&
                         <IonButtons slot={`end`} className={`custom-delete-button`}>
-                            {
-                                mode === MODES.SELECT &&
-                                <IonBadge color={`danger`}>
-                                    {selectedIds.length}
-                                </IonBadge>
-                            }
-                            {
-                                mode === MODES.SELECT &&
-                                <IonButton className={`ion-margin-start`} color={`danger`} onClick={()=>{
-                                    presentAlert({
-                                        header: `Are you sure you want to delete ${selectedIds.length} ${selectedIds.length === 1 ? 'project' : 'projects'}?`,
-                                        cssClass: `custom-alert`,
-                                        buttons: [
-                                            {
-                                                text: 'Cancel',
-                                                role: 'cancel',
-                                            },
-                                            {
-                                                text: 'Delete',
-                                                role: 'confirm',
-                                                cssClass: 'delete-alert',
-                                                handler: handleDelete,
-                                            },
-                                        ]
-                                    })
-                                }}>
+                            <IonBadge color={`danger`}>
+                                {selectedIds.length}
+                            </IonBadge>
+                            <>
+                                <IonAlert
+                                    isOpen={showAlert}
+                                    cssClass={`custom-alert`}
+                                    onDidDismiss={() => setShowAlert(false)}
+                                    header="Alert"
+                                    message={`Are you sure you want to delete ${selectedIds.length} ${selectedIds.length === 1 ? 'project' : 'projects'}?`}
+                                    buttons={[{ text: `Cancel`, role: `cancel` },
+                                        { text: `Delete`, role: `confirm`, cssClass: `delete-alert`, handler: handleDelete }]}
+                                />
+                                <IonButton className={`ion-margin-start`} color={`danger`} onClick={()=> setShowAlert(true)}>
                                     <IonIcon size={`large`} icon={trash}/>
                                 </IonButton>
-                            }
+                            </>
                         </IonButtons>
+                    }
+                    {
+                        mode === MODES.SELECT &&
                         <IonButtons slot={`start`} className={`custom-delete-button`}>
-                            {
-                                mode === MODES.SELECT &&
-                                <IonButton color={`danger`} onClick={handleCancel}>
-                                    Cancel
-                                </IonButton>
-                            }
+                            <IonButton color={`danger`} onClick={handleCancel}>
+                                Cancel
+                            </IonButton>
                         </IonButtons>
-                    </IonToolbar>
-                </IonFooter>
-            }
+                    }
+
+                    {   mode !== MODES.SELECT &&
+                        <IonButtons slot={`start`}>
+                            <IonButton className={`sign-button`} onClick={()=> setShowSignAlert(true)}>
+                                <IonIcon size={`large`} icon={exit}/>
+                            </IonButton>
+                            <IonAlert
+                                isOpen={showSignAlert}
+                                cssClass={`custom-alert`}
+                                onDidDismiss={() => setShowSignAlert(false)}
+                                header="Alert"
+                                message={`Are you sure you want to log out?`}
+                                buttons={[{ text: `Cancel`, role: `cancel` },
+                                    { text: `Log Out`, role: `confirm`, cssClass: `sign-alert`, handler: handleSignOut }]}
+                            />
+                        </IonButtons>
+                    }
+                    {
+                        mode !== MODES.SELECT &&
+                        <IonTitle slot={`start`}>
+                            <IonText style={{ color: `#ffffff` }}>
+                                {
+                                    user.searching &&
+                                    <Box display={`flex`} flexDirection={`column`} alignItems={`flex-start`} justifyContent={`center`} color={`#fff`}>
+                                        <IonSpinner color={`rgba(0,0,0,0.3)`}></IonSpinner>
+                                    </Box>
+                                }
+                                {
+                                    user.data?.name
+                                }
+                            </IonText>
+                        </IonTitle>
+                    }
+                </IonToolbar>
+            </IonFooter>
         </IonPage>
     );
 }

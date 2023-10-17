@@ -3,27 +3,41 @@ import {
     IonAccordionGroup,
     IonButtons,
     IonContent,
-    IonHeader, IonItem, IonLabel,
+    IonHeader,
+    IonItem,
+    IonLabel,
     IonPage,
     IonTitle,
     IonToolbar,
-    IonBackButton, IonButton, useIonAlert, IonIcon, IonImg, IonListHeader, IonSpinner, useIonViewDidEnter,
+    IonBackButton,
+    IonButton,
+    IonIcon,
+    IonImg,
+    IonListHeader,
+    IonSpinner,
+    IonAlert,
+    IonText,
+    IonFooter,
+    useIonViewDidEnter,
 } from "@ionic/react";
 import {Box, createTheme, ThemeProvider} from "@mui/system";
 import VerticalLinearStepper from "../components/Stepper";
 import './ProjectDetail.css';
-import {checkmarkCircle, closeCircle, trash} from 'ionicons/icons';
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import {checkmarkCircle, closeCircle, exit, trash} from 'ionicons/icons';
+import React, {useCallback, useContext, useEffect, useRef, useState} from "react";
 import LogoNoText from "../images/arccon-logo-no-text.png";
 import {RouteComponentProps} from "react-router";
 import MyToast from "../components/MyToast";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faMagnifyingGlass} from "@fortawesome/free-solid-svg-icons";
 import Typography from "@mui/material/Typography";
-import {Storage} from "@ionic/storage";
+import {collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, query, where} from "firebase/firestore";
+import {Auth} from "../context/Auth";
 import MyLoading from "../components/MyLoading";
-import {deleteDoc, doc, getDoc} from "firebase/firestore";
-import db from "../firebaseConfig";
+import {getAuth, signOut} from "firebase/auth";
+import {admins as adminsData, admins, bosses} from "../data";
+import {Data} from "../context/Data";
+import {UserData} from "../context/Hooks/useGetUserByUID";
 
 
 enum ACCORDION {
@@ -37,13 +51,14 @@ interface RouteParams extends RouteComponentProps<{
 }>{}
 
 interface Project {
-    id: string,
+    id: string | undefined,
     client: string,
     name: string,
     number: string,
     current_task: number,
     environmental_survey: boolean,
     laboratory: boolean,
+    deadline: boolean,
 }
 
 enum ToastType {
@@ -71,8 +86,7 @@ const theme = createTheme({
 const ProjectDetail = (props: RouteParams) : JSX.Element => {
 
     const { match, history } = props;
-    const [project, setProject] = useState<Project>()
-    const [presentAlert] = useIonAlert();
+    const [project, setProject] = useState<Project | undefined>(undefined)
     const [showAccordion, setShowAccordion] = useState<ACCORDION>(ACCORDION.CLOSE);
     const [showToast, setShowToast] = useState<boolean>(false);
     const [toastMessage, setToastMessage] = useState<string>('');
@@ -82,9 +96,17 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
     const [transitionEnd, setTransitionEnd] = useState<boolean | undefined>(undefined);
     const [boxTop, setBoxTop] = useState<number>(0);
     const [loaded, setLoaded] = useState<boolean>(false);
+    const [showAlert, setShowAlert] = useState<boolean>(false);
+    const content = useRef<HTMLIonContentElement>();
+    const db = getFirestore();
+    const token = useContext(Auth)?.token;
     const [showLoading, setShowLoading] = useState<boolean>(false);
     const [loadingMessage, setLoadingMessage] = useState<string>('');
-    const content = useRef<HTMLIonContentElement>();
+    const [showSignAlert, setShowSignAlert] = useState(false);
+    const setOpen = useContext(Auth)?.setOpen;
+    const setToken = useContext(Auth)?.setToken;
+    const user = useContext(Data)?.userData as UserData;
+    const isBoss = user.data?.role === "boss";
 
     const handleAccordionClick = () => {
         if (showAccordion === ACCORDION.OPEN){
@@ -107,16 +129,23 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
         }
     }, [])
 
-    const readProject = async (): Promise<void> => {
-        try {
-            setProject(undefined)
-            const store = new Storage();
-            await store.create();
-            const projectCache = await store.get(`project-${match.params.projectId}`);
-            if (projectCache === null){
-                setShowAccordion(ACCORDION.CLOSE);
-                setShowCircle(true);
-                const result = await getDoc(doc(db, "Projects", match.params.projectId));
+    useEffect(()=>{
+
+        const newProjectTest = {
+            id: "0",
+            client: 'test',
+            number: 'test',
+            name: "test",
+            current_task: 2,
+            environmental_survey: true,
+            laboratory: false,
+            deadline: false,
+        }
+
+        setProject(newProjectTest);
+
+        if (token !== undefined && token !== null){
+            const unsubscribe = onSnapshot(doc(db, "Projects", match.params.projectId), (result) => {
                 const newProject = {
                     id: result.id,
                     client: result.get('client'),
@@ -125,60 +154,86 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
                     current_task: result.get('currentTask'),
                     environmental_survey: result.get('environmentalSurvey'),
                     laboratory: result.get('laboratory'),
+                    deadline: result.get('deadline')?.toDate(),
                 }
                 setProject(newProject);
-                await store.set(`project-${match.params.projectId}`, newProject);
-                setShowCircle(false);
-                setShowAccordion(ACCORDION.OPEN)
-            } else {
-                setProject(projectCache);
-                setShowAccordion(ACCORDION.OPEN)
+                if (newProject.name === undefined){
+                    setProject(undefined)
+                }
+            })
+        }
+    }, [token])
+
+    const readProject = async (): Promise<void> => {
+        try {
+            setShowAccordion(ACCORDION.CLOSE);
+            setShowCircle(true);
+            const result = await getDoc(doc(db, "Projects", match.params.projectId));
+            const newProject = {
+                id: result.id,
+                client: result.get('client'),
+                name: result.get('name'),
+                number: result.get('number'),
+                current_task: result.get('currentTask'),
+                environmental_survey: result.get('environmentalSurvey'),
+                laboratory: result.get('laboratory'),
+                deadline: result.get('deadline')?.toDate(),
             }
-        }catch (e: any) {
-            setShowAccordion(ACCORDION.CLOSE)
+            setProject(newProject)
+            if (newProject.name === undefined){
+                setProject(undefined);
+            }
             setShowCircle(false);
+            setShowAccordion(ACCORDION.OPEN)
+        }catch (e: any) {
+            setShowCircle(false)
+            setShowAccordion(ACCORDION.CLOSE)
             let message = e.message;
-            if (e?.code === 100){
-                message = `Unable to connect to the server`
-            }
             setToastType(ToastType.error);
             setToastMessage(message);
             setShowToast(true);
         }
     }
-
-    useEffect(()=>{
-        console.log(project)
-    }, [project])
 
     useIonViewDidEnter(()=>{
         (async ()=>{
-            await readProject();
+            if (token !== undefined && token !== null){
+                await readProject();
+            } else {
+                setShowCircle(false);
+            }
         })()
-    })
+    }, [token])
 
     const handleDelete = async () => {
-        try {
-            setLoadingMessage(`Deleting project`)
-            setShowLoading(true);
-            const store = new Storage();
-            await store.create();
-            await deleteDoc(doc(db, 'Projects', match.params.projectId));
-            await store.remove(`project-${match.params.projectId}`);
-            await store.remove(`admin-${match.params.adminId}-projects`);
-            setShowLoading(false);
-            history.go(-1);
-        } catch (e: any) {
-            setShowLoading(false);
-            let message = e.message;
-            if (e.code === 100){
-                message = `Unable to connect to the server`
+        history.go(-1);
+        setShowAlert(false);
+        await deleteDoc(doc(db, 'Projects', match.params.projectId));
+    }
+
+    const handleSignOut = () => {
+        const auth = getAuth();
+        signOut(auth).then(()=>{
+            props.history.replace("/");
+            if (setToken){
+                setToken(null);
             }
+            if (setOpen){
+                setOpen(true);
+            }
+        }).catch((error)=>{
+            let message = error;
             setToastType(ToastType.error);
             setToastMessage(message);
             setShowToast(true);
-        }
+        })
     }
+
+    useEffect(()=>{
+        setToastType(ToastType.error);
+        setToastMessage(user.error.message);
+        setShowToast(user.error.show)
+    }, [user])
 
     return(
         <IonPage className={`custom-project-detail`}>
@@ -187,28 +242,23 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
                     <IonButtons slot={`start`}>
                         <IonBackButton defaultHref={`/${match.params.adminId}/project/list`}/>
                     </IonButtons>
-                    <IonButtons slot={`end`}>
-                        <IonButton color={`danger`} onClick={()=>{
-                            presentAlert({
-                                header: `Are you sure you want to delete this item?`,
-                                cssClass: `custom-detail-alert`,
-                                buttons: [
-                                    {
-                                        text: 'Cancel',
-                                        role: 'cancel',
-                                    },
-                                    {
-                                        text: 'Delete',
-                                        role: 'confirm',
-                                        cssClass: 'delete-alert',
-                                        handler: handleDelete,
-                                    },
-                                ]
-                            })
-                        }}>
-                            <IonIcon size={`large`} icon={trash}/>
-                        </IonButton>
-                    </IonButtons>
+                    {
+                        (isBoss || user.data?.id === match.params.adminId) &&
+                        <IonButtons slot={`end`}>
+                            <IonAlert
+                                isOpen={showAlert}
+                                cssClass={`custom-detail-alert`}
+                                onDidDismiss={() => setShowAlert(false)}
+                                header="Alert"
+                                message="Are you sure you want to delete this item?"
+                                buttons={[{ text: `Cancel`, role: `cancel` },
+                                    { text: `Delete`, role: `confirm`, cssClass: `delete-alert`, handler: handleDelete }]}
+                            />
+                            <IonButton color={`danger`} onClick={()=> setShowAlert(true)}>
+                                <IonIcon size={`large`} icon={trash}/>
+                            </IonButton>
+                        </IonButtons>
+                    }
                     <IonTitle>
                         <Box width={65} margin={`auto`} className={`custom-logo`}>
                             <IonImg src={LogoNoText}/>
@@ -229,7 +279,7 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
                         </IonItem>
                         <Box slot={`content`} sx={{ bgcolor: `rgba(255, 255, 255, 0.5)`, }}>
                             {
-                                showCircle === true &&
+                                showCircle === true && project === undefined &&
                                 <Box display={`flex`} flexDirection={`column`} alignItems={`center`} justifyContent={`center`} p={2} color={`rgba(0,0,0,0.3)`}>
                                     <IonSpinner color={`rgba(0,0,0,0.3)`}></IonSpinner>
                                 </Box>
@@ -264,6 +314,15 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
                                         </IonLabel>
                                         <p style={{ fontSize: `1rem` }}>{project.number}</p>
                                     </IonItem>
+                                    {
+                                        project.deadline !== undefined &&
+                                            <IonItem className={`description-item custom-item-paragraph`} color={`transparent`}>
+                                                <IonLabel>
+                                                    Deadline
+                                                </IonLabel>
+                                                <p style={{ fontSize: `1rem` }}>{new Date(project.deadline.toString()).toLocaleDateString(`de-DE`, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                            </IonItem>
+                                    }
                                     <IonItem className={`description-item custom-item ${project.environmental_survey ? 'custom-success-icon' : 'custom-danger-icon'}`}
                                              color={`transparent`}>
                                         <IonIcon slot={`end`} icon={project.environmental_survey ? checkmarkCircle : closeCircle}
@@ -301,7 +360,7 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
                     </ThemeProvider>
                 </Box>
                 {
-                    showCircle === true &&
+                    showCircle === true && project === undefined &&
                     <Box display={`flex`} flexDirection={`column`} alignItems={`center`} justifyContent={`center`} p={2} color={`rgba(0,0,0,0.3)`}>
                         <IonSpinner color={`rgba(0,0,0,0.3)`}></IonSpinner>
                     </Box>
@@ -318,12 +377,43 @@ const ProjectDetail = (props: RouteParams) : JSX.Element => {
                 {
                     project !== undefined &&
                     <VerticalLinearStepper currentTask={project.current_task} environmentalSurvey={project.environmental_survey} laboratory={project.laboratory}
-                                           projectId={match.params.projectId} adminId={match.params.adminId} setBoxTop={setBoxTop} setStepHeight={setStepHeight} setProject={setProject}
-                                           transitionEnd={transitionEnd} readProject={readProject}/>
+                                           projectId={match.params.projectId} adminId={match.params.adminId} setBoxTop={setBoxTop} setStepHeight={setStepHeight}
+                                           transitionEnd={transitionEnd} renderControl={(isBoss || user.data?.id === match.params.adminId) || true}/>
                 }
                 <MyToast showToast={showToast} setShowToast={setShowToast} message={toastMessage} cssClass={toastType}/>
                 <MyLoading showLoading={showLoading} setShowLoading={setShowLoading} message={loadingMessage}/>
             </IonContent>
+            <IonFooter>
+                <IonToolbar className={`custom-toolbar`}>
+                    <IonButtons slot={`start`}>
+                        <IonButton className={`sign-button`} onClick={()=> setShowSignAlert(true)}>
+                            <IonIcon size={`large`} icon={exit}/>
+                        </IonButton>
+                        <IonAlert
+                            isOpen={showSignAlert}
+                            cssClass={`custom-alert`}
+                            onDidDismiss={() => setShowSignAlert(false)}
+                            header="Alert"
+                            message={`Are you sure you want to log out?`}
+                            buttons={[{ text: `Cancel`, role: `cancel` },
+                                { text: `Log Out`, role: `confirm`, cssClass: `sign-alert`, handler: handleSignOut }]}
+                        />
+                    </IonButtons>
+                    <IonTitle slot={`start`}>
+                        <IonText style={{ color: `#ffffff` }}>
+                            {
+                                user.searching &&
+                                <Box display={`flex`} flexDirection={`column`} alignItems={`flex-start`} justifyContent={`center`} color={`#fff`}>
+                                    <IonSpinner color={`rgba(0,0,0,0.3)`}></IonSpinner>
+                                </Box>
+                            }
+                            {
+                                user.data?.name
+                            }
+                        </IonText>
+                    </IonTitle>
+                </IonToolbar>
+            </IonFooter>
         </IonPage>
     );
 }

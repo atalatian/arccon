@@ -9,12 +9,16 @@ import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 import {createTheme, ThemeProvider} from "@mui/system";
 import {SetStateAction, useCallback, useEffect, useRef, useState} from "react";
-import {Task, tasks} from "../data";
+import {admins, Task, tasks} from "../data";
 import MyLoading from "./MyLoading";
 import MyToast from "./MyToast";
 import {Storage} from "@ionic/storage";
-import {doc, getDoc, setDoc} from "firebase/firestore";
-import db from "../firebaseConfig";
+import {doc, getDoc, getFirestore, setDoc} from "firebase/firestore";
+import {getAuth} from "firebase/auth";
+import {IonButton, IonIcon} from "@ionic/react";
+import { informationCircle } from 'ionicons/icons'
+import {IconButton} from "@mui/material";
+import StepDescriptionAlert from "./StepDescriptionAlert";
 
 
 const theme = createTheme({
@@ -42,6 +46,7 @@ interface Project {
     current_task: number,
     environmental_survey: boolean,
     laboratory: boolean,
+    deadline: boolean,
 }
 
 interface Props {
@@ -53,8 +58,7 @@ interface Props {
     setBoxTop: React.Dispatch<SetStateAction<number>>,
     setStepHeight: React.Dispatch<SetStateAction<number>>,
     transitionEnd: boolean | undefined,
-    setProject: React.Dispatch<SetStateAction<Project | undefined>>,
-    readProject: () => Promise<void>,
+    renderControl: boolean,
 }
 
 
@@ -65,21 +69,20 @@ enum ToastType {
 
 export default function VerticalLinearStepper(props: Props) {
 
-    const { setProject } = props;
     const { transitionEnd } = props
     const { setStepHeight, setBoxTop } = props
-    const { environmentalSurvey, laboratory, projectId, currentTask, adminId } = props;
+    const { environmentalSurvey, laboratory, projectId, currentTask, adminId, renderControl } = props;
 
-    const [showLoading, setShowLoading] = useState<boolean>(false);
-    const [loadingMessage, setLoadingMessage] = useState<string>('');
     const [showToast, setShowToast] = useState<boolean>(false);
     const [toastMessage, setToastMessage] = useState<string>('');
     const [toastType, setToastType] = useState<ToastType>(ToastType.error);
     const [loaded, setLoaded] = useState<boolean>(false);
     const [resetLoaded, setResetLoaded] = useState<boolean>(false);
     const [stepContentTransEnd, setStepContentTransEnd] = useState<number>(0);
+    const [selectedId, setSelectedId] = useState<number>(-1);
     const steps = useRef<HTMLDivElement[]>([]);
     const reset = useRef<HTMLDivElement>();
+    const db = getFirestore();
 
     const filteredTasks: Task[] = tasks.filter((task) => task.environmental_survey === environmentalSurvey && task.laboratory === laboratory)
         .sort((a, b)=>{
@@ -87,24 +90,6 @@ export default function VerticalLinearStepper(props: Props) {
         })
 
     const [activeStep, setActiveStep] = React.useState(-1);
-
-    const reFetchProject = async (): Promise<void> => {
-        const result = await getDoc(doc(db, "Projects", projectId));
-        const newProject = {
-            id: result.id,
-            client: result.get('client'),
-            name: result.get('name'),
-            number: result.get('number'),
-            current_task: result.get('currentTask'),
-            environmental_survey: result.get('environmentalSurvey'),
-            laboratory: result.get('laboratory'),
-        }
-        const store = new Storage();
-        await store.create();
-        setProject(newProject);
-        await store.set(`project-${projectId}`, newProject);
-    }
-
 
     useEffect(() => {
         if (currentTask === -1){
@@ -144,24 +129,16 @@ export default function VerticalLinearStepper(props: Props) {
     const handleNext = (id: number) => {
         return async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) : Promise<void> => {
             try {
-                setLoadingMessage('Changing task')
-                setShowLoading(true);
+                //setLoadingMessage('Changing task')
+                //setShowLoading(true);
                 await setDoc(doc(db, "Projects", projectId), {
                     currentTask: id,
                     updatedAt: new Date(),
                 }, { merge: true });
-                const store = new Storage();
-                await store.create();
-                await store.remove(`admin-${adminId}-projects`);
-                await store.remove(`project-${projectId}`);
-                await reFetchProject();
-                setShowLoading(false);
+                //setShowLoading(false);
             } catch (e: any) {
-                setShowLoading(false);
+                //setShowLoading(false);
                 let message = e.message;
-                if (e.code === 100){
-                    message = `Unable to connect to the server`
-                }
                 setToastType(ToastType.error);
                 setToastMessage(message);
                 setShowToast(true);
@@ -172,24 +149,16 @@ export default function VerticalLinearStepper(props: Props) {
     const handleBack = (id: number) => {
         return async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) : Promise<void> => {
             try {
-                setLoadingMessage('Changing task')
-                setShowLoading(true);
+                //setLoadingMessage('Changing task')
+                //setShowLoading(true);
                 await setDoc(doc(db, "Projects", projectId), {
                     currentTask: id,
                     updatedAt: new Date(),
                 }, { merge: true });
-                const store = new Storage();
-                await store.create();
-                await store.remove(`admin-${adminId}-projects`);
-                await store.remove(`project-${projectId}`);
-                await reFetchProject();
-                setShowLoading(false);
+                //setShowLoading(false);
             } catch (e: any) {
-                setShowLoading(false);
+                //setShowLoading(false);
                 let message = e.message;
-                if (e.code === 100){
-                    message = `Unable to connect to the server`
-                }
                 setToastType(ToastType.error);
                 setToastMessage(message);
                 setShowToast(true);
@@ -199,24 +168,16 @@ export default function VerticalLinearStepper(props: Props) {
 
     const handleFinish = async () => {
         try {
-            setLoadingMessage('Finishing project')
-            setShowLoading(true);
+            //setLoadingMessage('Finishing project')
+            //setShowLoading(true);
             await setDoc(doc(db, "Projects", projectId), {
                 currentTask: -1,
                 updatedAt: new Date(),
             }, { merge: true });
-            const store = new Storage();
-            await store.create();
-            await store.remove(`admin-${adminId}-projects`);
-            await store.remove(`project-${projectId}`);
-            await reFetchProject();
-            setShowLoading(false);
+            //setShowLoading(false);
         } catch (e: any) {
-            setShowLoading(false);
+            //setShowLoading(false);
             let message = e.message;
-            if (e.code === 100){
-                message = `Unable to connect to the server`
-            }
             setToastType(ToastType.error);
             setToastMessage(message);
             setShowToast(true);
@@ -227,24 +188,16 @@ export default function VerticalLinearStepper(props: Props) {
         try {
             const firstTaskId: number | undefined = filteredTasks.find((task) =>
                 task.environmental_survey === environmentalSurvey && task.laboratory === laboratory && task.level === 1)?.id
-            setLoadingMessage('Resetting tasks')
-            setShowLoading(true);
+            //setLoadingMessage('Resetting tasks')
+            //setShowLoading(true);
             await setDoc(doc(db, "Projects", projectId), {
                 currentTask: firstTaskId,
                 updatedAt: new Date(),
             }, { merge: true });
-            const store = new Storage();
-            await store.create();
-            await store.remove(`admin-${adminId}-projects`);
-            await store.remove(`project-${projectId}`);
-            await reFetchProject();
-            setShowLoading(false);
+            //setShowLoading(false);
         } catch (e: any) {
-            setShowLoading(false);
+            //setShowLoading(false);
             let message = e.message;
-            if (e.code === 100){
-                message = `Unable to connect to the server`
-            }
             setToastType(ToastType.error);
             setToastMessage(message);
             setShowToast(true);
@@ -278,91 +231,86 @@ export default function VerticalLinearStepper(props: Props) {
                 {filteredTasks.map((step, index) => (
                     <Step key={step.id} disabled={true}>
                         <Box id={`box-${step.level}`} component={`div`} ref={handleRef}></Box>
-                        <StepLabel>
-                            <ThemeProvider theme={theme}>
-                                <Typography className={`make-ionic`} textTransform={`capitalize`}>
+                        <Box display={`flex`}>
+                            <StepLabel>
+                                <Typography textTransform={`capitalize`}>
                                     {step.name}
                                 </Typography>
-                            </ThemeProvider>
-                        </StepLabel>
+                            </StepLabel>
+                            <StepDescriptionAlert step={step}/>
+                        </Box>
                         <StepContent onTransitionEnd={()=> setStepContentTransEnd((prev) => prev === 100 ? 0 : prev + 1)}>
-                            <Box sx={{ mb: 2 }}>
-                                <div>
-                                    {   index === filteredTasks.length - 1
-                                        ?
-                                        <Button
-                                            variant="contained"
-                                            className={`make-ionic`}
-                                            onClick={handleFinish}
-                                            sx={{
-                                                mt: 1,
-                                                mr: 1,
-                                                "&.MuiButtonBase-root.MuiButton-contained": {
-                                                    backgroundColor: `#b22b48`,
-                                                },
-                                                "&.MuiButtonBase-root.MuiButton-contained:hover": {
-                                                    backgroundColor: `#97253D`,
-                                                },
-                                            }}
-                                        >
-                                            <ThemeProvider theme={theme}>
+                            {   renderControl &&
+                                <Box sx={{ mb: 2 }}>
+                                    <div>
+                                        {   index === filteredTasks.length - 1
+                                            ?
+                                            <Button
+                                                variant="contained"
+                                                onClick={handleFinish}
+                                                sx={{
+                                                    mt: 1,
+                                                    mr: 1,
+                                                    "&.MuiButtonBase-root.MuiButton-contained": {
+                                                        backgroundColor: `#b22b48`,
+                                                    },
+                                                    "&.MuiButtonBase-root.MuiButton-contained:hover": {
+                                                        backgroundColor: `#97253D`,
+                                                    },
+                                                }}
+                                            >
                                                 <Typography sx={{ textTransform: `capitalize` }}>
                                                     Finish
                                                 </Typography>
-                                            </ThemeProvider>
-                                        </Button>
-                                        :
+                                            </Button>
+                                            :
+                                            <Button
+                                                variant="contained"
+                                                onClick={handleNext(index !== filteredTasks.length - 1 ? filteredTasks[index + 1].id : filteredTasks[index].id)}
+                                                sx={{
+                                                    mt: 1,
+                                                    mr: 1,
+                                                    "&.MuiButtonBase-root.MuiButton-contained": {
+                                                        backgroundColor: `#b22b48`,
+                                                    },
+                                                    "&.MuiButtonBase-root.MuiButton-contained:hover": {
+                                                        backgroundColor: `#97253D`,
+                                                    },
+                                                }}
+                                            >
+                                                <Typography sx={{ textTransform: `capitalize` }}>
+                                                    Continue
+                                                </Typography>
+                                            </Button>
+                                        }
                                         <Button
-                                            variant="contained"
-                                            className={`make-ionic`}
-                                            onClick={handleNext(index !== filteredTasks.length - 1 ? filteredTasks[index + 1].id : filteredTasks[index].id)}
+                                            disabled={index === 0}
+                                            variant={`contained`}
+                                            onClick={handleBack(index !== 0 ? filteredTasks[index - 1].id : filteredTasks[index].id)}
                                             sx={{
                                                 mt: 1,
                                                 mr: 1,
                                                 "&.MuiButtonBase-root.MuiButton-contained": {
-                                                    backgroundColor: `#b22b48`,
+                                                    backgroundColor: `#ffffff`,
+                                                    color: `#1d1d1b`
                                                 },
                                                 "&.MuiButtonBase-root.MuiButton-contained:hover": {
-                                                    backgroundColor: `#97253D`,
+                                                    backgroundColor: `#cccccc`,
                                                 },
+                                                "&.MuiButtonBase-root.MuiButton-contained.Mui-disabled": {
+                                                    color: `rgba(0, 0, 0, 0.1)`,
+                                                    backgroundColor: `rgba(0, 0, 0, 0.1)`,
+                                                }
                                             }}
                                         >
-                                            <ThemeProvider theme={theme}>
-                                                <Typography sx={{ textTransform: `capitalize` }}>
-                                                    Continue
-                                                </Typography>
-                                            </ThemeProvider>
-                                        </Button>
-                                    }
-                                    <Button
-                                        disabled={index === 0}
-                                        variant={`contained`}
-                                        className={`make-ionic`}
-                                        onClick={handleBack(index !== 0 ? filteredTasks[index - 1].id : filteredTasks[index].id)}
-                                        sx={{
-                                            mt: 1,
-                                            mr: 1,
-                                            "&.MuiButtonBase-root.MuiButton-contained": {
-                                                backgroundColor: `#ffffff`,
-                                                color: `#1d1d1b`
-                                            },
-                                            "&.MuiButtonBase-root.MuiButton-contained:hover": {
-                                                backgroundColor: `#cccccc`,
-                                            },
-                                            "&.MuiButtonBase-root.MuiButton-contained.Mui-disabled": {
-                                                color: `rgba(0, 0, 0, 0.1)`,
-                                                backgroundColor: `rgba(0, 0, 0, 0.1)`,
-                                            }
-                                        }}
-                                    >
-                                        <ThemeProvider theme={theme}>
-                                            <Typography className={`make-ionic`} sx={{ textTransform: `capitalize` }}>
+                                            <Typography sx={{ textTransform: `capitalize` }}>
                                                 Back
                                             </Typography>
-                                        </ThemeProvider>
-                                    </Button>
-                                </div>
-                            </Box>
+                                        </Button>
+                                    </div>
+                                </Box>
+                            }
+
                         </StepContent>
                     </Step>
                 ))}
@@ -376,7 +324,7 @@ export default function VerticalLinearStepper(props: Props) {
                     ml: 1
                 }}>
                     <Typography className={`make-ionic`}>All steps completed - you&apos;re finished</Typography>
-                    <Button onClick={handleReset} variant={`contained`} className={`make-ionic`} sx={{
+                    <Button onClick={handleReset} variant={`contained`} sx={{
                         mt: 1,
                         mr: 1,
                         "&.MuiButtonBase-root.MuiButton-contained": {
@@ -395,7 +343,6 @@ export default function VerticalLinearStepper(props: Props) {
                 </Paper>
             )}
             <MyToast showToast={showToast} setShowToast={setShowToast} message={toastMessage} cssClass={toastType}/>
-            <MyLoading showLoading={showLoading} setShowLoading={setShowLoading} message={loadingMessage}/>
         </Box>
     );
 }
