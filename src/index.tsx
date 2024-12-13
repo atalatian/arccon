@@ -1,14 +1,15 @@
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import App from './App';
-import * as serviceWorkerRegistration from './serviceWorkerRegistration';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
+import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
+import reportWebVitals from "./reportWebVitals";
 import AuthContextProvider from "./context/Auth";
-import {initializeApp} from "firebase/app";
-import {enableIndexedDbPersistence, getFirestore} from "firebase/firestore";
-import {getMessaging} from "firebase/messaging";
-import {getFunctions} from "firebase/functions";
-import {getAuth} from "firebase/auth";
+import { initializeApp } from "firebase/app";
+import { enableIndexedDbPersistence, getFirestore } from "firebase/firestore";
+import { getMessaging } from "firebase/messaging";
+import { getFunctions } from "firebase/functions";
+import { getAuth } from "firebase/auth";
+import { getStorage, getDownloadURL, ref } from "firebase/storage";
 import DataContextProvider from "./context/Data";
 
 const firebaseConfig = {
@@ -22,13 +23,24 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const messaging = getMessaging(app);
-const functions = getFunctions(app);
-const auth = getAuth(app);
+getMessaging(app);
+getFunctions(app);
+getAuth(app);
+const storage = getStorage(app);
 const db = getFirestore(app);
 
+export async function getPngUrl(filePath: string) {
+    try {
+        const fileRef = ref(storage, filePath); // Path to the PNG file in your storage bucket
+        const url = await getDownloadURL(fileRef);
+        return url;
+    } catch (error) {
+        console.error("Error getting download URL:", error);
+    }
+}
+
 enableIndexedDbPersistence(db).then(() => {
-    const container = document.getElementById('root');
+    const container = document.getElementById("root");
     const root = createRoot(container!);
     root.render(
         <React.StrictMode>
@@ -42,4 +54,4 @@ enableIndexedDbPersistence(db).then(() => {
 
     serviceWorkerRegistration.register();
     reportWebVitals();
-})
+});

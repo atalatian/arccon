@@ -1,0 +1,32 @@
+# Ignore node_modules to avoid unnecessary copying
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Ignore local environment files
+.env
+.env.local
+.env.*.local
+
+# Ignore Firebase credentials (if not using volume mounting for credentials)
+credentials.json
+
+# Ignore Docker-specific files
+Dockerfile
+docker-compose.yml
+
+# Ignore logs and temp files
+*.log
+*.tmp
+
+# Ignore IDE/editor config files
+.vscode/
+.idea/
+
+# Ignore Git-related files
+.git/
+.gitignore
+
+# Ignore system files
+.DS_Store
+Thumbs.db
